@@ -62,16 +62,21 @@ test-python: bindings
 	cd $(VAR) && venv/bin/python -m unittest discover -s $(CURDIR)/packages/python/generated/tests -t $(CURDIR)/packages/python/generated/tests
 	cd $(VAR) && HTTP_MEDIA_TYPE_CASES=$(CASES) venv/bin/python -m unittest discover -s $(CURDIR)/packages/python/tests -t $(CURDIR)/packages/python/tests
 
-# The addon beside the generated entry, the package packed and installed into var/node; the generated tests and the
-# contract cases run there against the installed package.
-NODE_ADDON := http-media-type.$(shell node -p 'process.platform + "-" + process.arch + (process.platform === "linux" ? "-gnu" : "")').node
+# The package and the platform package of the addon, packed and installed into var/node; the generated tests and the
+# contract cases run there against the installed packages. T-2: the addon is the npm package of this machine's platform,
+# which the package names in optionalDependencies; the recipe packs it as a release does and installs both tarballs,
+# without the other platforms' packages.
+PLATFORM := $(shell node -p 'process.platform + "-" + process.arch + (process.platform === "linux" ? "-gnu" : "")')
+NODE_ADDON := http-media-type.$(PLATFORM).node
 test-node: bindings
 	$(CARGO) build $(CARGOFLAGS) -p $(CORE)-node --locked --features panic-test
-	cp $(CARGO_TARGET_DIR)/debug/libpolyspec_http_media_type_node.so packages/ts/generated/$(NODE_ADDON)
-	rm -rf $(VAR)/node && mkdir -p $(VAR)/node
+	rm -rf $(VAR)/node $(VAR)/node-platform && mkdir -p $(VAR)/node $(VAR)/node-platform
+	cp $(CARGO_TARGET_DIR)/debug/libpolyspec_http_media_type_node.so $(VAR)/node-platform/$(NODE_ADDON)
+	node -e 'const p = require("./packages/ts/package.json"); require("fs").writeFileSync("$(VAR)/node-platform/package.json", JSON.stringify({ name: p.name + "-$(PLATFORM)", version: p.version, os: [process.platform], cpu: [process.arch], main: "$(NODE_ADDON)", files: ["$(NODE_ADDON)"] }, null, 2) + "\n")'
+	cd $(VAR)/node-platform && npm pack --pack-destination $(VAR)/node
 	cd packages/ts && npm pack --pack-destination $(VAR)/node
 	echo '{ "private": true }' > $(VAR)/node/package.json
-	cd $(VAR)/node && npm install --no-audit --no-fund ./*.tgz
+	cd $(VAR)/node && npm install --no-audit --no-fund --omit=optional ./*.tgz
 	cp packages/ts/generated/tests/generated.test.mjs packages/ts/tests/cases.test.mjs $(VAR)/node/
 	cd $(VAR)/node && HTTP_MEDIA_TYPE_CASES=$(CASES) node --test generated.test.mjs cases.test.mjs
 
