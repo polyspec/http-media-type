@@ -35,7 +35,7 @@ class ContractCaseTest(unittest.TestCase):
         self.assertEqual(error.kind, raises["kind"])
         self.assertEqual(error.status, raises["status"])
         category = raises["category"].capitalize()
-        self.assertIs(type(error), getattr(media_types, f"MediaType{category}Error"))
+        self.assertIs(type(error), getattr(media_types, f"HttpMediaType{category}Error"))
         if raises["message"] is not None:
             self.assertEqual(str(error), raises["message"])
 

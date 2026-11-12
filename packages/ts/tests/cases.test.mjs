@@ -18,7 +18,7 @@ function check(kase, call, expected) {
   if (kase.raises !== undefined) {
     const category = kase.raises.category[0].toUpperCase() + kase.raises.category.slice(1);
     assert.throws(call, (error) =>
-      error.constructor === mediaTypes[`MediaType${category}Error`] &&
+      error.constructor === mediaTypes[`HttpMediaType${category}Error`] &&
       error.kind === kase.raises.kind &&
       error.status === kase.raises.status &&
       (kase.raises.message === null || error.message === kase.raises.message), kase.id);

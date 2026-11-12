@@ -60,7 +60,7 @@ final class CasesTest extends TestCase
             $call();
             self::fail('no error: ' . $case['id']);
         } catch (\Throwable $error) {
-            $class = 'Polyspec\\HttpMediaType\\MediaType' . ucfirst($raises['category']) . 'Error';
+            $class = 'Polyspec\\HttpMediaType\\HttpMediaType' . ucfirst($raises['category']) . 'Error';
             self::assertSame($class, $error::class, $case['id']);
             self::assertSame($raises['kind'], $error->kind(), $case['id']);
             self::assertSame($raises['status'], $error->status(), $case['id']);
