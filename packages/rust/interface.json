@@ -5,7 +5,7 @@
   "targets": ["php", "python", "node"],
   "packages": {
     "php": {"package": "polyspec/http-media-type", "namespace": "Polyspec\\HttpMediaType"},
-    "python": {"package": "polyspec-http-media-type", "module": "polyspec_http_media_type"},
+    "python": {"package": "polyspec-http-media-type", "module": "polyspec.http_media_type"},
     "node": {"package": "@polyspec/http-media-type", "entries": {".": {"formats": ["import", "require"]}}}
   },
   "naming": {"exceptions": []},

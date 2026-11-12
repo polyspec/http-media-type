@@ -16,3 +16,4 @@
   repository that depends on the crate reads the contract from the package that Cargo resolved. The category error
   classes are named `MediaType<Category>Error` in every language (`MediaTypeValueError` and so on), apart from the
   built-in classes such as Python `ValueError`.
+- The Python module of the contract is `polyspec.http_media_type`, the one form of the package names of polyspec.

@@ -13,3 +13,4 @@
 - 인터페이스 계약을 `packages/rust/interface.json`으로 옮기고 crate의 `include`에 넣는다. crate에 의존하는 레포가
   Cargo가 해석한 패키지에서 계약을 읽게 하기 위해서다. category 오류 클래스 이름은 모든 언어에서
   `MediaType<Category>Error`(`MediaTypeValueError` 등)이며 Python `ValueError` 같은 내장 클래스와 겹치지 않는다.
+- 계약의 Python 모듈은 polyspec 패키지 이름의 한 형식인 `polyspec.http_media_type`이다.
