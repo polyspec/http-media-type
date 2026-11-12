@@ -17,7 +17,7 @@ HTTP의 media type(RFC 9110 8.3.1절)과 그것을 쓰는 문법인 token, quote
 
 규칙은 [docs/spec/media-type.md](docs/spec/media-type.md), case는 [contracts/media-type.json](contracts/media-type.json),
 바인딩의 공개 API는 crate 패키지에 들어가는 [packages/rust/interface.json](packages/rust/interface.json)에 있다. 코어는
-`packages/rust`의 Rust crate이며, PHP, Python, Node 바인딩은 bindgen이 인터페이스 계약에서 생성한다: Composer 패키지
+`packages/rust`의 Rust crate이며, PHP, Python, Node 바인딩은 binding이 인터페이스 계약에서 생성한다: Composer 패키지
 `polyspec/http-media-type`(PHP 확장 `polyspec_http_media_type`), PyPI 패키지 `polyspec-http-media-type`(모듈
 `polyspec.http_media_type`, Python 3.14 이상), npm 패키지 `@polyspec/http-media-type`. 각각 `parse`, `format`,
 `sameValue`/`same_value`, record `MediaType`과 `Parameter`, `kind`와 `status`를 가진 오류 클래스
