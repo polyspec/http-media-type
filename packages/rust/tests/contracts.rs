@@ -67,8 +67,11 @@ fn raises(error: Error) -> Value {
 }
 
 fn media_type_of(media_type: &MediaType) -> Value {
-    let parameters: Vec<Value> =
-        media_type.parameters.iter().map(|parameter| json!([parameter.name, text(&parameter.value)])).collect();
+    let parameters: Vec<Value> = media_type
+        .parameters
+        .iter()
+        .map(|parameter| json!({"name": parameter.name, "value": text(&parameter.value)}))
+        .collect();
     json!({"type": media_type.r#type, "subtype": media_type.subtype, "parameters": parameters})
 }
 
@@ -77,10 +80,11 @@ fn media_type_of(media_type: &MediaType) -> Value {
 fn media_type_from(value: &Value) -> Result<MediaType, String> {
     let parameters = array(value, "parameters")?
         .iter()
-        .map(|pair| {
-            let name = pair.get(0).ok_or(format!("no name in {pair}"))?;
-            let value = pair.get(1).ok_or(format!("no value in {pair}"))?;
-            Ok(Parameter { name: text(&latin1(name)?), value: latin1(value)? })
+        .map(|parameter| {
+            Ok(Parameter {
+                name: text(&latin1(field(parameter, "name")?)?),
+                value: latin1(field(parameter, "value")?)?,
+            })
         })
         .collect::<Result<Vec<_>, String>>()?;
     Ok(MediaType {
@@ -122,7 +126,7 @@ fn parse_cases() -> Result<(), String> {
     let mut failures = Vec::new();
     for case in group(&cases, "parse")? {
         let outcome = parse(&latin1(field(case, "value")?)?);
-        compare(&mut failures, case, "mediaType", outcome, media_type_of)?;
+        compare(&mut failures, case, "media_type", outcome, media_type_of)?;
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
     Ok(())
@@ -133,7 +137,7 @@ fn format_cases() -> Result<(), String> {
     let cases = cases()?;
     let mut failures = Vec::new();
     for case in group(&cases, "format")? {
-        let media_type = media_type_from(field(case, "mediaType")?)?;
+        let media_type = media_type_from(field(case, "media_type")?)?;
         let outcome = format(&media_type);
         compare(&mut failures, case, "text", outcome.clone(), |bytes| Value::String(text(bytes)))?;
         // MT-6.5: what is written reads back to the media type with its names in lowercase.
