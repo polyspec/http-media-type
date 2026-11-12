@@ -1,0 +1,33 @@
+# The workspace of the repository: the core crate now, and the binding crates that bindgen generates later.
+[workspace]
+resolver = "2"
+members = ["packages/rust"]
+
+[workspace.package]
+version = "0.0.1"
+edition = "2021"
+license = "MIT"
+rust-version = "1.97.0"
+repository = "https://github.com/polyspec/http-media-type.git"
+
+# Every warning fails; no unsafe code; no hidden error (P-3: no value stands in for a failure), and every allow
+# attribute names the rule that needs it. clippy.toml disallows the methods that turn a failure or an absence into a
+# value.
+[workspace.lints.rust]
+warnings = "deny"
+unsafe_code = "deny"
+unused_must_use = "deny"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+allow_attributes_without_reason = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
+let_underscore_must_use = "deny"
+let_underscore_untyped = "deny"
+map_err_ignore = "deny"
+as_conversions = "deny"
+
+[profile.release]
+lto = true
+codegen-units = 1

@@ -1,0 +1,16 @@
+# clippy reads clippy.toml from the folder of the Cargo workspace. A failure or an absence is never turned into a
+# plausible value: match it or use `?`. A use that is truly needed carries
+# #[allow(clippy::disallowed_methods, reason = "<rule id>")].
+disallowed-methods = [
+  { path = "core::option::Option::unwrap_or", reason = "an absence becomes a plausible value; match it" },
+  { path = "core::option::Option::unwrap_or_default", reason = "an absence becomes a default value; match it" },
+  { path = "core::option::Option::unwrap_or_else", reason = "an absence becomes a computed fallback; match it" },
+  { path = "core::option::Option::map_or", reason = "an absence becomes a plausible value; match it" },
+  { path = "core::option::Option::map_or_else", reason = "an absence becomes a computed fallback; match it" },
+  { path = "core::result::Result::ok", reason = "an error becomes None and is dropped; match it or use ?" },
+  { path = "core::result::Result::map_or", reason = "an error becomes a plausible value; handle it" },
+  { path = "core::result::Result::map_or_else", reason = "an error becomes a computed fallback; handle it" },
+  { path = "core::result::Result::unwrap_or", reason = "an error becomes a plausible value; handle it" },
+  { path = "core::result::Result::unwrap_or_default", reason = "an error becomes a default value; handle it" },
+  { path = "core::result::Result::unwrap_or_else", reason = "an error becomes a computed fallback; handle it" },
+]

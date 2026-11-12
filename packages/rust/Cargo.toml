@@ -1,0 +1,20 @@
+[package]
+name = "polyspec-http-media-type"
+description = "Media types of HTTP: their reader, their writer, the comparison of parameter values and their grammar"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+name = "polyspec_http_media_type"
+path = "src/lib.rs"
+
+[dev-dependencies]
+serde_json = "1"
+proptest = "1"
+
+[lints]
+workspace = true
