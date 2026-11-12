@@ -18,7 +18,7 @@ decides it.
 The rules are in [docs/spec/media-type.md](docs/spec/media-type.md), the cases in
 [contracts/media-type.json](contracts/media-type.json) and the public API of the bindings in
 [packages/rust/interface.json](packages/rust/interface.json), which the crate package holds. The core is the Rust crate in
-`packages/rust`; the PHP, Python and Node bindings are generated from the interface contract by bindgen: the Composer
+`packages/rust`; the PHP, Python and Node bindings are generated from the interface contract by binding: the Composer
 package `polyspec/http-media-type` (the PHP extension `polyspec_http_media_type`), the PyPI package
 `polyspec-http-media-type` (module `polyspec.http_media_type`, Python 3.14 or later) and the npm package
 `@polyspec/http-media-type`. Each has `parse`, `format` and `sameValue`/`same_value`, the records `MediaType` and

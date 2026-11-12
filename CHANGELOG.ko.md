@@ -1,22 +1,6 @@
-# 변경 기록
 
-[English](CHANGELOG.md)
-
-## Unreleased
-
-- spec MT-1~MT-9를 더한다: media type(RFC 9110 8.3.1절), token, parameter와 quoted string(5.6.2, 5.6.4, 5.6.6절),
-  parameter 값의 비교(`charset`은 8.3.2절), 쓰기, 다른 field의 reader를 위한 문법 모듈, 오류 kind, 무시하는 입력 표.
-- contract case `contracts/media-type.json`(group `parse`, `format`, `sameValue`)을 더한다.
-- Rust 코어 `polyspec-http-media-type`(`parse`, `format`, `same_value`, 모듈 `grammar`)과 그 contract·인용·무작위·런타임
-  시험, `unwrap`, `expect`와 실패나 부재를 값으로 바꾸는 메서드를 금지하는 lint를 더한다.
-- PHP, Python, Node 바인딩을 위한 인터페이스 계약 초안 `contracts/interface.json`을 더한다.
-- 인터페이스 계약을 `packages/rust/interface.json`으로 옮기고 crate의 `include`에 넣는다. crate에 의존하는 레포가
-  Cargo가 해석한 패키지에서 계약을 읽게 하기 위해서다. category 오류 클래스 이름은 모든 언어에서
-  `MediaType<Category>Error`(`MediaTypeValueError` 등)이며 Python `ValueError` 같은 내장 클래스와 겹치지 않는다.
-- 계약의 Python 모듈은 polyspec 패키지 이름의 한 형식인 `polyspec.http_media_type`이다.
-- 저장소는 `bindgen scaffold`가 쓰는 바인딩 crate `packages/python`, `packages/ts`, `packages/php-ext`를 가진 Cargo
-  workspace 하나다. 코어는 `polyspec-bindgen-core`에 의존하고 오류에 `Kinds`를 구현한다. `make bindings`는 PHP,
-  Python, Node 바인딩을 생성하고, `make test-bindings`는 각각을 빌드, 설치해 생성된 시험과 contract case로 시험한다.
-  case는 bindgen의 case 규약을 따른다: `mediaType`은 `media_type`이고 parameter는 `{"name", "value"}`다.
-- category 오류 클래스는 `MediaType<Category>Error` 대신 `HttpMediaType<Category>Error`(`HttpMediaTypeValueError` 등)다.
-  클래스 이름의 `<Library>`는 레포 이름의 PascalCase다(bindgen 설계 E-2, 계획 N-1). 계약은 이 변경을 `changes`에 적는다.
+- 레포는 binding 레포(bindgen의 새 이름)의 `polyspec-binding-core`(`binding_core`, `Cargo.lock`이 고정하는 Git 의존
+  `https://github.com/polyspec/binding.git`)에 의존하고 그 도구를 `scripts/binding.mts`로 실행한다. 바인딩 package는
+  `binding scaffold`가 쓰는 것이다. Python 오류 클래스는 Python의 클래스 형식으로 쓴 레포 이름인
+  `HTTPMediaType<Category>Error`다(설계 N-2: 약어 낱말은 Python에서 모두 대문자, PHP와 Node에서 첫 글자만 대문자이며 두
+  언어는 `HttpMediaType<Category>Error`를 유지한다).

@@ -40,20 +40,20 @@ rules of this repository.
 ## Bindings
 
 - The repository is one Cargo workspace: the core `packages/rust` and the binding crates `packages/python`,
-  `packages/ts` and `packages/php-ext`, which `bindgen scaffold` writes and `make bindings-check` compares; their
+  `packages/ts` and `packages/php-ext`, which `binding scaffold` writes and `make bindings-check` compares; their
   `generated/` is not tracked. `Cargo.lock` at the root pins every dependency.
-- `polyspec-bindgen-core` is a Git dependency of the core and of the binding crates (branch `v1/rust-core` of the
-  bindgen repository) until bindgen is released; `Cargo.lock` pins its commit. The core implements
-  `bindgen_core::Kinds` for its error (MT-8).
-- bindgen itself is the TypeScript tool of the same repository, which no registry holds yet. `scripts/bindgen.mts`
+- `polyspec-binding-core` is a Git dependency of the core and of the binding crates (branch `v1/rust-core` of the
+  binding repository) until binding is released; `Cargo.lock` pins its commit. The core implements
+  `binding_core::Kinds` for its error (MT-8).
+- binding itself is the TypeScript tool of the same repository, which no registry holds yet. `scripts/binding.mts`
   takes it from the checkout that Cargo made of the commit that `Cargo.lock` pins, copies it into
-  `var/bindgen/<commit>` and installs its dependencies there by its `package-lock.json`, so that the generator and
-  `bindgen_core` are one version. This holds only until the first release of bindgen.
-- A case of `contracts/media-type.json` follows the case convention of bindgen (G-5): its keys are the parameter names
+  `var/binding/<commit>` and installs its dependencies there by its `package-lock.json`, so that the generator and
+  `binding_core` are one version. This holds only until the first release of binding.
+- A case of `contracts/media-type.json` follows the case convention of binding (G-5): its keys are the parameter names
   in snake_case (`media_type`), and a record is the object of its fields (a parameter is `{"name", "value"}`).
 - `make bindings` generates; every make target that builds or tests a binding runs it first. `make test-bindings` runs
   clippy on the whole workspace, `make check-declarations`, then `make test-python`, `make test-node` and
-  `make test-php`, each of which runs the tests that bindgen generates and the contract cases of
+  `make test-php`, each of which runs the tests that binding generates and the contract cases of
   `packages/<language>/tests`. The variables `PYTHON` (3.14 or later), `PHP`, `PHP_CONFIG` and `PHPUNIT` name the
   runtimes; `CARGOFLAGS` adds arguments to every cargo build.
 - The development tools are dependencies of the repository: TypeScript in `package.json`, pinned by
