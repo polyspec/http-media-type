@@ -16,8 +16,8 @@ HTTP의 media type(RFC 9110 8.3.1절)과 그것을 쓰는 문법인 token, quote
 정한다.
 
 규칙은 [docs/spec/media-type.md](docs/spec/media-type.md), case는 [contracts/media-type.json](contracts/media-type.json),
-바인딩의 공개 API는 [contracts/interface.json](contracts/interface.json)에 있다. 코어는 `packages/rust`의 Rust
-crate이며, PHP, Python, Node 바인딩은 인터페이스 계약에서 생성하고 아직 없다.
+바인딩의 공개 API는 crate 패키지에 들어가는 [packages/rust/interface.json](packages/rust/interface.json)에 있다. 코어는
+`packages/rust`의 Rust crate이며, PHP, Python, Node 바인딩은 인터페이스 계약에서 생성하고 아직 없다.
 
 ```sh
 make test

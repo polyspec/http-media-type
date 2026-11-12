@@ -12,12 +12,12 @@
   "types": {},
   "errors": {
     "classes": {
-      "value": {"php": "Polyspec\\HttpMediaType\\ValueError", "python": "ValueError", "node": "ValueError"},
-      "type": {"php": "Polyspec\\HttpMediaType\\TypeError", "python": "TypeError", "node": "TypeError"},
-      "io": {"php": "Polyspec\\HttpMediaType\\IoError", "python": "IoError", "node": "IoError"},
-      "store": {"php": "Polyspec\\HttpMediaType\\StoreError", "python": "StoreError", "node": "StoreError"},
-      "busy": {"php": "Polyspec\\HttpMediaType\\BusyError", "python": "BusyError", "node": "BusyError"},
-      "internal": {"php": "Polyspec\\HttpMediaType\\InternalError", "python": "InternalError", "node": "InternalError"}
+      "value": {"php": "Polyspec\\HttpMediaType\\MediaTypeValueError", "python": "MediaTypeValueError", "node": "MediaTypeValueError"},
+      "type": {"php": "Polyspec\\HttpMediaType\\MediaTypeTypeError", "python": "MediaTypeTypeError", "node": "MediaTypeTypeError"},
+      "io": {"php": "Polyspec\\HttpMediaType\\MediaTypeIoError", "python": "MediaTypeIoError", "node": "MediaTypeIoError"},
+      "store": {"php": "Polyspec\\HttpMediaType\\MediaTypeStoreError", "python": "MediaTypeStoreError", "node": "MediaTypeStoreError"},
+      "busy": {"php": "Polyspec\\HttpMediaType\\MediaTypeBusyError", "python": "MediaTypeBusyError", "node": "MediaTypeBusyError"},
+      "internal": {"php": "Polyspec\\HttpMediaType\\MediaTypeInternalError", "python": "MediaTypeInternalError", "node": "MediaTypeInternalError"}
     },
     "fixed": [
       {"lang": "php", "class": "ArgumentCountError"},

@@ -17,8 +17,8 @@ decides it.
 
 The rules are in [docs/spec/media-type.md](docs/spec/media-type.md), the cases in
 [contracts/media-type.json](contracts/media-type.json) and the public API of the bindings in
-[contracts/interface.json](contracts/interface.json). The core is the Rust crate in `packages/rust`; the PHP, Python and
-Node bindings are generated from the interface contract and do not exist yet.
+[packages/rust/interface.json](packages/rust/interface.json), which the crate package holds. The core is the Rust crate in
+`packages/rust`; the PHP, Python and Node bindings are generated from the interface contract and do not exist yet.
 
 ```sh
 make test

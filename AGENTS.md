@@ -21,7 +21,9 @@ rules of this repository.
 - A text of `contracts/media-type.json` is bytes, one character per byte (U+0000 to U+00FF). A failure is the object
   `raises` with `kind`, `status`, `category` and `message`, and a case that fails has no result key.
 - Every rule is in the Rust core `packages/rust`. A binding converts types and holds no rule; the bindings are
-  generated from `contracts/interface.json` and are not written by hand.
+  generated from the interface contract `packages/rust/interface.json` and are not written by hand. The contract is
+  in the crate package (`include` of `packages/rust/Cargo.toml`), so that a repository that depends on the crate reads
+  it through Cargo.
 - An input that changes no result is a row of the table "Inputs ignored" of the spec, with its standard clause and a
   case that shows it. An input ignored without such a row is a defect.
 - A record of this repository (spec, comment, test, changelog, commit message) states rules and their reasons by rule

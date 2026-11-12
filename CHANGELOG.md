@@ -12,3 +12,7 @@
   contract, citation, random and runtime tests, and the lints that deny `unwrap`, `expect` and the methods that turn a
   failure or an absence into a value.
 - Add the draft interface contract `contracts/interface.json` for the PHP, Python and Node bindings.
+- Move the interface contract to `packages/rust/interface.json` and add it to the `include` of the crate, so that a
+  repository that depends on the crate reads the contract from the package that Cargo resolved. The category error
+  classes are named `MediaType<Category>Error` in every language (`MediaTypeValueError` and so on), apart from the
+  built-in classes such as Python `ValueError`.

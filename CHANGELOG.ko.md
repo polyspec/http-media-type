@@ -10,3 +10,6 @@
 - Rust 코어 `polyspec-http-media-type`(`parse`, `format`, `same_value`, 모듈 `grammar`)과 그 contract·인용·무작위·런타임
   시험, `unwrap`, `expect`와 실패나 부재를 값으로 바꾸는 메서드를 금지하는 lint를 더한다.
 - PHP, Python, Node 바인딩을 위한 인터페이스 계약 초안 `contracts/interface.json`을 더한다.
+- 인터페이스 계약을 `packages/rust/interface.json`으로 옮기고 crate의 `include`에 넣는다. crate에 의존하는 레포가
+  Cargo가 해석한 패키지에서 계약을 읽게 하기 위해서다. category 오류 클래스 이름은 모든 언어에서
+  `MediaType<Category>Error`(`MediaTypeValueError` 등)이며 Python `ValueError` 같은 내장 클래스와 겹치지 않는다.
