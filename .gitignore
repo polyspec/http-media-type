@@ -1,1 +1,7 @@
+/packages/rust/target/
 /target/
+/var/
+/packages/*/generated/
+__pycache__/
+/node_modules/
+/vendor/

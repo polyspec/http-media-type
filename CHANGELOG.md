@@ -17,3 +17,8 @@
   classes are named `MediaType<Category>Error` in every language (`MediaTypeValueError` and so on), apart from the
   built-in classes such as Python `ValueError`.
 - The Python module of the contract is `polyspec.http_media_type`, the one form of the package names of polyspec.
+- The repository is one Cargo workspace with the binding crates `packages/python`, `packages/ts` and `packages/php-ext`
+  that `bindgen scaffold` writes. The core depends on `polyspec-bindgen-core` and implements `Kinds` for its error.
+  `make bindings` generates the PHP, Python and Node bindings, and `make test-bindings` builds, installs and tests each
+  with the generated tests and the contract cases. The cases follow the case convention of bindgen: `mediaType` is
+  `media_type` and a parameter is `{"name", "value"}`.

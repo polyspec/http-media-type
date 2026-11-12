@@ -1,15 +1,84 @@
-# The tasks of this repository. The Rust toolchain is the one that rust-toolchain.toml pins.
-.PHONY: test lint test-rust lint-rust
+CARGO := cargo
+# Extra arguments of every cargo build, for example --ignore-rust-version on a machine without the pinned release.
+CARGOFLAGS ?=
+CORE := polyspec-http-media-type
+BINDGEN := node scripts/bindgen.mts
+CASES := $(CURDIR)/contracts/media-type.json
+VAR := $(CURDIR)/var
+export CARGO_TARGET_DIR ?= $(CURDIR)/target
+# The language runtimes. PHP is the binary whose headers the extension is built against (PHP_CONFIG) and that loads it.
+PYTHON ?= python3.14
+PHP ?= php
+PHP_CONFIG ?= php-config
+PHPUNIT ?= vendor/bin/phpunit
+MATURIN := maturin==1.16.0
+# ext-php-rs reads them when it builds the extension.
+export PHP PHP_CONFIG
 
-test: test-rust
+.PHONY: check test lint lint-rust fmt-check bindings-check bindings test-bindings lint-bindings test-python test-node test-php \
+	check-declarations
 
-lint: lint-rust
+# The core and the contract; none of them needs the generator (bindgen design L-2).
+check: lint-rust fmt-check test bindings-check
 
-# The contract cases, the rule citations, the random tests and the runtime properties (MT-1 to MT-9).
-test-rust:
-	cargo test --locked --offline
+lint: lint-rust fmt-check
 
-# R-1 lints of Cargo.toml and clippy.toml; every warning fails.
+test:
+	$(CARGO) test $(CARGOFLAGS) -p $(CORE) --locked
+
 lint-rust:
-	cargo fmt --check
-	cargo clippy --locked --offline --all-targets -- -D warnings
+	$(CARGO) clippy $(CARGOFLAGS) -p $(CORE) --locked --all-targets -- -D warnings
+
+fmt-check:
+	$(CARGO) fmt --all --check
+
+# The contract check and the comparison of the tracked binding packages with what bindgen writes (L-2 (c)).
+bindings-check:
+	$(BINDGEN) check packages/rust/interface.json
+
+# Writes the generated sources into packages/{php-ext,python,ts}/generated, which are not tracked (G-6, L-1).
+bindings:
+	$(BINDGEN) generate --root .
+
+test-bindings: lint-bindings check-declarations test-python test-node test-php
+
+lint-bindings: bindings
+	$(CARGO) clippy $(CARGOFLAGS) --workspace --locked --all-targets --features panic-test -- -D warnings
+
+# The TypeScript compiler of package-lock.json checks the generated declarations of the Node binding.
+node_modules/.package-lock.json: package-lock.json
+	npm ci --no-audit --no-fund
+
+check-declarations: bindings node_modules/.package-lock.json
+	node_modules/.bin/tsc --noEmit --strict packages/ts/generated/index.d.ts
+
+# The wheel, installed into a virtual environment; the generated tests (G-5) and the contract cases (MT-1 to MT-8).
+test-python: bindings
+	$(PYTHON) -m venv --clear $(VAR)/venv
+	$(VAR)/venv/bin/pip install -q $(MATURIN)
+	rm -rf $(VAR)/wheels
+	cd packages/python && $(VAR)/venv/bin/maturin build --locked --features panic-test --out $(VAR)/wheels $(CARGOFLAGS)
+	$(VAR)/venv/bin/pip install -q --force-reinstall $(VAR)/wheels/*.whl
+	cd $(VAR) && venv/bin/python -m unittest discover -s $(CURDIR)/packages/python/generated/tests -t $(CURDIR)/packages/python/generated/tests
+	cd $(VAR) && HTTP_MEDIA_TYPE_CASES=$(CASES) venv/bin/python -m unittest discover -s $(CURDIR)/packages/python/tests -t $(CURDIR)/packages/python/tests
+
+# The addon beside the generated entry, the package packed and installed into var/node; the generated tests and the
+# contract cases run there against the installed package.
+NODE_ADDON := http-media-type.$(shell node -p 'process.platform + "-" + process.arch + (process.platform === "linux" ? "-gnu" : "")').node
+test-node: bindings
+	$(CARGO) build $(CARGOFLAGS) -p $(CORE)-node --locked --features panic-test
+	cp $(CARGO_TARGET_DIR)/debug/libpolyspec_http_media_type_node.so packages/ts/generated/$(NODE_ADDON)
+	rm -rf $(VAR)/node && mkdir -p $(VAR)/node
+	cd packages/ts && npm pack --pack-destination $(VAR)/node
+	echo '{ "private": true }' > $(VAR)/node/package.json
+	cd $(VAR)/node && npm install --no-audit --no-fund ./*.tgz
+	cp packages/ts/generated/tests/generated.test.mjs packages/ts/tests/cases.test.mjs $(VAR)/node/
+	cd $(VAR)/node && HTTP_MEDIA_TYPE_CASES=$(CASES) node --test generated.test.mjs cases.test.mjs
+
+# The extension built against PHP_CONFIG and loaded into PHP; the stub is linted, then the generated tests and the
+# contract cases run on PHPUnit.
+test-php: bindings
+	$(CARGO) build $(CARGOFLAGS) -p $(CORE)-php-ext --locked --features panic-test
+	$(PHP) -l packages/php-ext/generated/polyspec_http_media_type.stub.php
+	$(PHP) -d extension=$(CARGO_TARGET_DIR)/debug/libpolyspec_http_media_type.so $(PHPUNIT) packages/php-ext/generated/tests
+	HTTP_MEDIA_TYPE_CASES=$(CASES) $(PHP) -d extension=$(CARGO_TARGET_DIR)/debug/libpolyspec_http_media_type.so $(PHPUNIT) packages/php-ext/tests

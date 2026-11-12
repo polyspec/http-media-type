@@ -1,0 +1,9 @@
+{
+  "name": "http-media-type-development",
+  "private": true,
+  "description": "The development tools of the repository: the TypeScript compiler that checks the generated declarations of the Node binding",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
+}

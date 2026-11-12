@@ -14,3 +14,7 @@
   Cargo가 해석한 패키지에서 계약을 읽게 하기 위해서다. category 오류 클래스 이름은 모든 언어에서
   `MediaType<Category>Error`(`MediaTypeValueError` 등)이며 Python `ValueError` 같은 내장 클래스와 겹치지 않는다.
 - 계약의 Python 모듈은 polyspec 패키지 이름의 한 형식인 `polyspec.http_media_type`이다.
+- 저장소는 `bindgen scaffold`가 쓰는 바인딩 crate `packages/python`, `packages/ts`, `packages/php-ext`를 가진 Cargo
+  workspace 하나다. 코어는 `polyspec-bindgen-core`에 의존하고 오류에 `Kinds`를 구현한다. `make bindings`는 PHP,
+  Python, Node 바인딩을 생성하고, `make test-bindings`는 각각을 빌드, 설치해 생성된 시험과 contract case로 시험한다.
+  case는 bindgen의 case 규약을 따른다: `mediaType`은 `media_type`이고 parameter는 `{"name", "value"}`다.

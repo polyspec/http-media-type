@@ -21,7 +21,7 @@ rules of this repository.
 - A text of `contracts/media-type.json` is bytes, one character per byte (U+0000 to U+00FF). A failure is the object
   `raises` with `kind`, `status`, `category` and `message`, and a case that fails has no result key.
 - Every rule is in the Rust core `packages/rust`. A binding converts types and holds no rule; the bindings are
-  generated from the interface contract `packages/rust/interface.json` and are not written by hand. The contract is
+  generated from the interface contract `packages/rust/interface.json` and are not written by hand (see Bindings). The contract is
   in the crate package (`include` of `packages/rust/Cargo.toml`), so that a repository that depends on the crate reads
   it through Cargo.
 - An input that changes no result is a row of the table "Inputs ignored" of the spec, with its standard clause and a
@@ -37,10 +37,34 @@ rules of this repository.
   family, `Result::ok`, `map_or`, `map_or_else`). A use that a rule needs carries `#[allow(..., reason = "<rule id>")]`.
 - No function performs I/O, keeps state or waits (MT-9).
 
+## Bindings
+
+- The repository is one Cargo workspace: the core `packages/rust` and the binding crates `packages/python`,
+  `packages/ts` and `packages/php-ext`, which `bindgen scaffold` writes and `make bindings-check` compares; their
+  `generated/` is not tracked. `Cargo.lock` at the root pins every dependency.
+- `polyspec-bindgen-core` is a Git dependency of the core and of the binding crates (branch `v1/rust-core` of the
+  bindgen repository) until bindgen is released; `Cargo.lock` pins its commit. The core implements
+  `bindgen_core::Kinds` for its error (MT-8).
+- bindgen itself is the TypeScript tool of the same repository, which no registry holds yet. `scripts/bindgen.mts`
+  takes it from the checkout that Cargo made of the commit that `Cargo.lock` pins, copies it into
+  `var/bindgen/<commit>` and installs its dependencies there by its `package-lock.json`, so that the generator and
+  `bindgen_core` are one version. This holds only until the first release of bindgen.
+- A case of `contracts/media-type.json` follows the case convention of bindgen (G-5): its keys are the parameter names
+  in snake_case (`media_type`), and a record is the object of its fields (a parameter is `{"name", "value"}`).
+- `make bindings` generates; every make target that builds or tests a binding runs it first. `make test-bindings` runs
+  clippy on the whole workspace, `make check-declarations`, then `make test-python`, `make test-node` and
+  `make test-php`, each of which runs the tests that bindgen generates and the contract cases of
+  `packages/<language>/tests`. The variables `PYTHON` (3.14 or later), `PHP`, `PHP_CONFIG` and `PHPUNIT` name the
+  runtimes; `CARGOFLAGS` adds arguments to every cargo build.
+- The development tools are dependencies of the repository: TypeScript in `package.json`, pinned by
+  `package-lock.json`, and PHPUnit in `require-dev` of `composer.json`, installed into `vendor/`; `composer.lock` is not
+  tracked yet.
+
 ## Checks
 
-- `make test` runs the contract cases, the citation checks, the random tests and the runtime properties.
-- `make lint` runs `cargo fmt --check` and clippy with every warning denied.
+- `make test` runs the contract cases, the citation checks, the random tests and the runtime properties of the core.
+- `make lint` runs `cargo fmt --check` and clippy of the core with every warning denied; `make check` runs both and
+  `make bindings-check`.
 
 ## Commits and changes
 

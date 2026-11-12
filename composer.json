@@ -1,0 +1,12 @@
+{
+    "name": "polyspec/http-media-type-development",
+    "description": "The development tools of the repository: PHPUnit, which runs the tests of the PHP extension",
+    "type": "project",
+    "license": "MIT",
+    "require-dev": {
+        "phpunit/phpunit": "^12"
+    },
+    "config": {
+        "allow-plugins": false
+    }
+}
