@@ -1,0 +1,94 @@
+{
+  "schema": "polyspec/interface@1",
+  "library": "http-media-type",
+  "core": {"crate": "polyspec-http-media-type", "path": "packages/rust"},
+  "targets": ["php", "python", "node"],
+  "packages": {
+    "php": {"package": "polyspec/http-media-type", "namespace": "Polyspec\\HttpMediaType"},
+    "python": {"package": "polyspec-http-media-type", "module": "polyspec_http_media_type"},
+    "node": {"package": "@polyspec/http-media-type", "entries": {".": {"formats": ["import", "require"]}}}
+  },
+  "naming": {"exceptions": []},
+  "types": {},
+  "errors": {
+    "classes": {
+      "value": {"php": "Polyspec\\HttpMediaType\\ValueError", "python": "ValueError", "node": "ValueError"},
+      "type": {"php": "Polyspec\\HttpMediaType\\TypeError", "python": "TypeError", "node": "TypeError"},
+      "io": {"php": "Polyspec\\HttpMediaType\\IoError", "python": "IoError", "node": "IoError"},
+      "store": {"php": "Polyspec\\HttpMediaType\\StoreError", "python": "StoreError", "node": "StoreError"},
+      "busy": {"php": "Polyspec\\HttpMediaType\\BusyError", "python": "BusyError", "node": "BusyError"},
+      "internal": {"php": "Polyspec\\HttpMediaType\\InternalError", "python": "InternalError", "node": "InternalError"}
+    },
+    "fixed": [
+      {"lang": "php", "class": "ArgumentCountError"},
+      {"lang": "php", "class": "Error"},
+      {"lang": "python", "class": "TypeError"},
+      {"lang": "node", "class": "TypeError"}
+    ],
+    "kinds": [
+      {"variant": "polyspec_http_media_type::Error::MalformedMediaType", "category": "value"},
+      {"variant": "polyspec_http_media_type::Error::InvalidMediaType", "category": "value"}
+    ],
+    "binding": [],
+    "wrapped": []
+  },
+  "units": [
+    {
+      "id": "parameter", "name": ["parameter"], "module": "media_type", "kind": "record", "visibility": "public",
+      "origin": "generated", "core_type": "polyspec_http_media_type::Parameter",
+      "fields": [
+        {"name": ["name"], "type": "text", "required": true},
+        {"name": ["value"], "type": "latin1", "required": true}
+      ]
+    },
+    {
+      "id": "media_type", "name": ["media", "type"], "module": "media_type", "kind": "record", "visibility": "public",
+      "origin": "generated", "core_type": "polyspec_http_media_type::MediaType",
+      "fields": [
+        {"name": ["type"], "type": "text", "required": true},
+        {"name": ["subtype"], "type": "text", "required": true},
+        {"name": ["parameters"], "type": {"list": {"unit": "parameter"}}, "required": true}
+      ]
+    },
+    {
+      "id": "media_types", "name": ["media", "types"], "module": "media_type", "kind": "functions",
+      "visibility": "public", "origin": "generated",
+      "members": [
+        {
+          "id": "media_types.parse", "name": ["parse"], "kind": "function", "visibility": "public",
+          "parameters": [{"name": ["value"], "type": "latin1", "required": true}],
+          "returns": {"unit": "media_type"},
+          "raises": ["polyspec_http_media_type::Error::MalformedMediaType"],
+          "wait": "none",
+          "core": "polyspec_http_media_type::parse"
+        },
+        {
+          "id": "media_types.format", "name": ["format"], "kind": "function", "visibility": "public",
+          "parameters": [{"name": ["media", "type"], "type": {"unit": "media_type"}, "required": true}],
+          "returns": "latin1",
+          "raises": ["polyspec_http_media_type::Error::InvalidMediaType"],
+          "wait": "none",
+          "core": "polyspec_http_media_type::format"
+        },
+        {
+          "id": "media_types.same_value", "name": ["same", "value"], "kind": "function", "visibility": "public",
+          "parameters": [
+            {"name": ["name"], "type": "text", "required": true},
+            {"name": ["left"], "type": "latin1", "required": true},
+            {"name": ["right"], "type": "latin1", "required": true}
+          ],
+          "returns": "bool",
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_http_media_type::same_value"
+        }
+      ]
+    }
+  ],
+  "changes": [],
+  "cases": [
+    {"member": "media_types.parse", "file": "contracts/media-type.json", "group": "parse"},
+    {"member": "media_types.format", "file": "contracts/media-type.json", "group": "format"},
+    {"member": "media_types.same_value", "file": "contracts/media-type.json", "group": "sameValue"}
+  ]
+}
