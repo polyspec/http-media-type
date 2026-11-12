@@ -21,7 +21,7 @@ HTTP의 media type(RFC 9110 8.3.1절)과 그것을 쓰는 문법인 token, quote
 `polyspec/http-media-type`(PHP 확장 `polyspec_http_media_type`), PyPI 패키지 `polyspec-http-media-type`(모듈
 `polyspec.http_media_type`, Python 3.14 이상), npm 패키지 `@polyspec/http-media-type`. 각각 `parse`, `format`,
 `sameValue`/`same_value`, record `MediaType`과 `Parameter`, `kind`와 `status`를 가진 오류 클래스
-`MediaType<Category>Error`를 가진다. 아직 배포하지 않는다.
+`HttpMediaType<Category>Error`를 가진다. 아직 배포하지 않는다.
 
 ```sh
 make test            # 코어: contract case와 시험

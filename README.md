@@ -22,7 +22,7 @@ The rules are in [docs/spec/media-type.md](docs/spec/media-type.md), the cases i
 package `polyspec/http-media-type` (the PHP extension `polyspec_http_media_type`), the PyPI package
 `polyspec-http-media-type` (module `polyspec.http_media_type`, Python 3.14 or later) and the npm package
 `@polyspec/http-media-type`. Each has `parse`, `format` and `sameValue`/`same_value`, the records `MediaType` and
-`Parameter`, and the error classes `MediaType<Category>Error` with `kind` and `status`. No release is published yet.
+`Parameter`, and the error classes `HttpMediaType<Category>Error` with `kind` and `status`. No release is published yet.
 
 ```sh
 make test            # the core: the contract cases and the tests

@@ -12,12 +12,12 @@
   "types": {},
   "errors": {
     "classes": {
-      "value": {"php": "Polyspec\\HttpMediaType\\MediaTypeValueError", "python": "MediaTypeValueError", "node": "MediaTypeValueError"},
-      "type": {"php": "Polyspec\\HttpMediaType\\MediaTypeTypeError", "python": "MediaTypeTypeError", "node": "MediaTypeTypeError"},
-      "io": {"php": "Polyspec\\HttpMediaType\\MediaTypeIoError", "python": "MediaTypeIoError", "node": "MediaTypeIoError"},
-      "store": {"php": "Polyspec\\HttpMediaType\\MediaTypeStoreError", "python": "MediaTypeStoreError", "node": "MediaTypeStoreError"},
-      "busy": {"php": "Polyspec\\HttpMediaType\\MediaTypeBusyError", "python": "MediaTypeBusyError", "node": "MediaTypeBusyError"},
-      "internal": {"php": "Polyspec\\HttpMediaType\\MediaTypeInternalError", "python": "MediaTypeInternalError", "node": "MediaTypeInternalError"}
+      "value": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeValueError", "python": "HttpMediaTypeValueError", "node": "HttpMediaTypeValueError"},
+      "type": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeTypeError", "python": "HttpMediaTypeTypeError", "node": "HttpMediaTypeTypeError"},
+      "io": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeIoError", "python": "HttpMediaTypeIoError", "node": "HttpMediaTypeIoError"},
+      "store": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeStoreError", "python": "HttpMediaTypeStoreError", "node": "HttpMediaTypeStoreError"},
+      "busy": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeBusyError", "python": "HttpMediaTypeBusyError", "node": "HttpMediaTypeBusyError"},
+      "internal": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeInternalError", "python": "HttpMediaTypeInternalError", "node": "HttpMediaTypeInternalError"}
     },
     "fixed": [
       {"lang": "php", "class": "ArgumentCountError"},
@@ -85,7 +85,9 @@
       ]
     }
   ],
-  "changes": [],
+  "changes": [
+    {"id": "error-class-names", "rule": "E-2", "reason": "E-2, plan N-1: the <Library> of a category class is the PascalCase of the repository name http-media-type, so the classes are HttpMediaType<Category>Error", "symbol": "MediaType<Category>Error", "from": {"php": "Polyspec\\HttpMediaType\\MediaTypeValueError and the other MediaType<Category>Error", "python": "MediaTypeValueError and the other MediaType<Category>Error", "node": "MediaTypeValueError and the other MediaType<Category>Error"}, "to": null}
+  ],
   "cases": [
     {"member": "media_types.parse", "file": "contracts/media-type.json", "group": "parse"},
     {"member": "media_types.format", "file": "contracts/media-type.json", "group": "format"},

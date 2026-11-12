@@ -22,3 +22,6 @@
   `make bindings` generates the PHP, Python and Node bindings, and `make test-bindings` builds, installs and tests each
   with the generated tests and the contract cases. The cases follow the case convention of bindgen: `mediaType` is
   `media_type` and a parameter is `{"name", "value"}`.
+- The category error classes are `HttpMediaType<Category>Error` (`HttpMediaTypeValueError` and so on) instead of
+  `MediaType<Category>Error`: the `<Library>` of a class name is the PascalCase of the repository name (bindgen design
+  E-2, plan N-1). The contract records the change in `changes`.

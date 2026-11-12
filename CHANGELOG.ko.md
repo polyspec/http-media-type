@@ -18,3 +18,5 @@
   workspace 하나다. 코어는 `polyspec-bindgen-core`에 의존하고 오류에 `Kinds`를 구현한다. `make bindings`는 PHP,
   Python, Node 바인딩을 생성하고, `make test-bindings`는 각각을 빌드, 설치해 생성된 시험과 contract case로 시험한다.
   case는 bindgen의 case 규약을 따른다: `mediaType`은 `media_type`이고 parameter는 `{"name", "value"}`다.
+- category 오류 클래스는 `MediaType<Category>Error` 대신 `HttpMediaType<Category>Error`(`HttpMediaTypeValueError` 등)다.
+  클래스 이름의 `<Library>`는 레포 이름의 PascalCase다(bindgen 설계 E-2, 계획 N-1). 계약은 이 변경을 `changes`에 적는다.
