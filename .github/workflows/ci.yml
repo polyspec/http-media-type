@@ -57,12 +57,12 @@ jobs:
         run: make install-php-tools
       - id: check
         if: ${{ !cancelled() }}
-        run: make ci-targets TARGETS="${{ matrix.targets }}" CI_http-media-typeRT=var/ci/${{ matrix.name }}
+        run: make ci-targets TARGETS="${{ matrix.targets }}" CI_REPORT=var/ci/${{ matrix.name }}
       - id: summary
         if: ${{ !cancelled() }}
         env:
           CI_STEPS: ${{ toJSON(steps) }}
-        run: make ci-summary CI_http-media-typeRT=var/ci/${{ matrix.name }}
+        run: make ci-summary CI_REPORT=var/ci/${{ matrix.name }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         id: report
         if: ${{ !cancelled() }}
