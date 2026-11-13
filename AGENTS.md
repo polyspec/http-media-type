@@ -60,9 +60,9 @@ rules of this repository.
   arguments to every cargo build. On macOS a PHP extension and a Node addon take the symbols of their runtime when it
   loads them, so `.cargo/config.toml` tells the linker to leave them undefined, and the recipes name the library that
   Cargo builds by the extension of the platform (`dylib` on macOS, `so` on Linux).
-- The development tools are dependencies of the repository: TypeScript in `package.json`, pinned by
-  `package-lock.json`, and PHPUnit in `require-dev` of `composer.json`, installed into `vendor/`; `composer.lock` is not
-  tracked yet.
+- The development tools are dependencies of the repository: TypeScript in `package.json`, pinned by `package-lock.json`,
+  and PHPUnit in `require-dev` of `composer.json`, installed into `vendor/` by `composer install` and pinned by
+  `composer.lock`.
 
 ## Checks
 

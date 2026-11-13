@@ -1,4 +1,7 @@
 
+- `composer.lock` is tracked, so `composer install` installs the PHPUnit that runs the tests of the PHP extension at one
+  pinned version.
+
 - The bindings build and load on macOS: `.cargo/config.toml` tells the macOS linker to leave the symbols of PHP and
   Node undefined, which the runtime gives when it loads the library, and `make test-node` and `make test-php` name the
   library that Cargo builds by the extension of the platform (`dylib` on macOS, `so` on Linux). Before, the PHP
