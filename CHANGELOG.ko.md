@@ -1,5 +1,21 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b74e125b044a0748e4a7d9221169dc00f6741d05a1c46daa91211de97dbf58da -->
+<!-- source-sha256: 2b0bc91a7be2d6e73acebb5af906a2174603427044abb7c8ab1927c255ec50a4 -->
+
+## Unreleased
+
+- `make test-bindings`가 계약의 모든 target을 빌드하고 시험한다(binding BD-27). `make test-python`, `make test-node`,
+  `make test-php` 곁에 `make test-wasm`과 `make test-go`가 더해진다. `make test-wasm`은 생성된 시험과 새 contract case
+  `packages/ts/tests/cases.wasm.test.mjs`를 설치된 패키지의 subpath `./wasm`을 통해 node --test로 실행한다. 모듈과
+  그 glue는 패키지를 묶기 전에 wasm-bindgen CLI가 쓰며, 그 CLI의 판은 `wasm-bindgen` crate의 판이어야 한다. 그래서
+  `make test-node`와 `make test-wasm`은 단계 `node-package`를 함께 쓴다. `make test-go`는 feature `panic-test`와
+  `codec-test`로 정적 라이브러리를 빌드하고, gofmt와 go vet을 실행한 다음, 생성된 시험과 새 contract case
+  `packages/go/tests/cases_test.go`를 go test로 실행한다. Go는 `packages/go/go.mod`의 go 지시문의 판이고
+  `GOTOOLCHAIN=local`로 실행한다. `make check-declarations`는 WASM 바인딩의 선언도 검사한다. 변수 `GO`, `GOFMT`,
+  `WASM_BINDGEN`이 두 도구를 가리킨다. Go 파일 `zz_generated_*.go`는 추적되고(binding GN-3),
+  `packages/ts/wasm/generated`와 `packages/go/internal/ffi/generated`는 무시된다. 전에는 Go와 WASM 바인딩을 빌드하거나
+  시험하는 make target이 없었다. 모든 contract case가 다섯 runner(unittest, Node와 WASM의 node --test, PHPUnit, go
+  test)에서 각각 통과한다. `make fmt-check`는 여전히 `packages/go/internal/ffi/src/lib.rs`에서 실패한다. binding
+  scaffold가 쓰는 125자의 줄 때문이다.
 
 - 계약이 binding의 다섯 target을 적는다(BD-27): `packages/rust/interface.json`의 `targets`는 php, python, node,
   go, wasm이고, `packages.go`는 Go 모듈 `github.com/polyspec/http-media-type/packages/go`를 적으며, npm 패키지의 entry

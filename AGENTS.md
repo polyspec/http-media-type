@@ -55,11 +55,21 @@ rules of this repository.
 - A case of `contracts/media-type.json` follows the case convention of binding (G-5): its keys are the parameter names
   in snake_case (`media_type`), and a record is the object of its fields (a parameter is `{"name", "value"}`).
 - `make bindings` generates; every make target that builds or tests a binding runs it first. `make test-bindings` runs
-  clippy on the whole workspace, `make check-declarations`, then `make test-python`, `make test-node` and `make
-  test-php`, each of which runs the tests that binding generates and the contract cases of `packages/<language>/tests`.
-  No make target builds or tests the Go and WASM bindings yet; only the end-to-end check of binding (`make e2e` of
-  binding) runs them.
-  The variables `PYTHON` (3.14 or later), `PHP`, `PHP_CONFIG` and `PHPUNIT` name the runtimes; `CARGOFLAGS` adds
+  clippy on the whole workspace, `make check-declarations`, then `make test-python`, `make test-node`, `make
+  test-wasm`, `make test-php` and `make test-go`, one for each of the five targets of the contract, each of which runs
+  the tests that binding generates and the contract cases of the binding on the standard runner of its language:
+  unittest, node --test (Node and WASM, the WASM binding through the subpath `./wasm` of the same installed package),
+  PHPUnit and go test. The contract cases are `packages/python/tests`, `packages/ts/tests/cases.test.mjs`,
+  `packages/ts/tests/cases.wasm.test.mjs`, `packages/php-ext/tests` and `packages/go/tests`. A target that the
+  generator cannot take stays a failing target with its cause; no target is left out or skipped (binding BD-27).
+- In the Go module binding owns the files `zz_generated_*.go` (binding GN-3); they are tracked, because a Go module is
+  fetched as source, and `make bindings` writes them again. `packages/ts/wasm/generated` and
+  `packages/go/internal/ffi/generated` are not tracked; wasm-bindgen writes the module and its glue into the first.
+  The variables `PYTHON` (3.14 or later), `PHP`, `PHP_CONFIG`, `PHPUNIT`, `GO`, `GOFMT` and `WASM_BINDGEN` name the
+  runtimes. `make test-go` fails a Go of another release than the go directive of `packages/go/go.mod` and runs it with
+  `GOTOOLCHAIN=local`, so that it fetches no toolchain, and `make test-wasm` fails a wasm-bindgen CLI of another release
+  than the `wasm-bindgen` crate of `packages/ts/wasm/Cargo.toml`, because the CLI reads only a module of its own
+  release (binding GN-18). `CARGOFLAGS` adds
   arguments to every cargo build. On macOS a PHP extension and a Node addon take the symbols of their runtime when it
   loads them, so `.cargo/config.toml` tells the linker to leave them undefined, and the recipes name the library that
   Cargo builds by the extension of the platform (`dylib` on macOS, `so` on Linux).

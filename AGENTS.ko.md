@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: d876118cfc342f86fce6118c59c7309ce4d821024b74742310d919f966d31bb2 -->
+<!-- source-sha256: a62a5c5c501bfb7c0b2c38603008ac3286172bf655ab75f070f071e3f0b6d5c5 -->
 # 개발
 
 모든 polyspec 저장소의 작업 원칙은 polyspec의 `PRINCIPLES.md`에 있다. 이 파일은 이 저장소의 규칙만
@@ -55,11 +55,20 @@
 - `contracts/media-type.json`의 case는 binding의 case 규약(G-5)을 따른다. case의 key는 snake_case로 쓴 parameter
   이름(`media_type`)이고, record는 그 field들의 객체다(parameter는 `{"name", "value"}`다).
 - `make bindings`가 생성한다. 바인딩을 빌드하거나 시험하는 모든 make target은 그것을 먼저 실행한다. `make test-bindings`는
-  workspace 전체에 clippy를 실행하고, `make check-declarations`를 실행하고, 그다음 `make test-python`, `make test-node`, `make
-  test-php`를 실행한다. 이 셋은 각각 binding이 생성한 시험과 `packages/<language>/tests`의 contract case를 실행한다.
-  Go와 WASM 바인딩을 빌드하거나 시험하는 make target은 아직 없고, binding의 end-to-end 검사(binding의 `make e2e`)만
-  그것들을 돌린다.
-  변수 `PYTHON`(3.14 이상), `PHP`, `PHP_CONFIG`, `PHPUNIT`이 런타임을 가리킨다. `CARGOFLAGS`는 모든 cargo build에
+  workspace 전체에 clippy를 실행하고, `make check-declarations`를 실행하고, 그다음 계약의 다섯 target마다 하나씩
+  `make test-python`, `make test-node`, `make test-wasm`, `make test-php`, `make test-go`를 실행한다. 각각은 binding이
+  생성한 시험과 그 바인딩의 contract case를 그 언어의 표준 runner로 실행한다. runner는 unittest, node --test(Node와
+  WASM, WASM 바인딩은 같은 설치 패키지의 subpath `./wasm`으로), PHPUnit, go test다. contract case는
+  `packages/python/tests`, `packages/ts/tests/cases.test.mjs`, `packages/ts/tests/cases.wasm.test.mjs`,
+  `packages/php-ext/tests`, `packages/go/tests`다. 생성기가 받지 못하는 target은 원인과 함께 실패하는 target으로
+  남는다. 어떤 target도 빠지거나 건너뛰지 않는다(binding BD-27).
+- Go 모듈에서 binding은 파일 `zz_generated_*.go`를 소유한다(binding GN-3). Go 모듈은 소스로 받아지므로 이 파일들은
+  추적되고, `make bindings`가 다시 쓴다. `packages/ts/wasm/generated`와 `packages/go/internal/ffi/generated`는 추적하지
+  않는다. wasm-bindgen은 모듈과 그 glue를 앞의 디렉터리에 쓴다.
+  변수 `PYTHON`(3.14 이상), `PHP`, `PHP_CONFIG`, `PHPUNIT`, `GO`, `GOFMT`, `WASM_BINDGEN`이 런타임을 가리킨다.
+  `make test-go`는 `packages/go/go.mod`의 go 지시문과 다른 판의 Go를 실패시키고, toolchain을 받지 않도록
+  `GOTOOLCHAIN=local`로 실행한다. `make test-wasm`은 `packages/ts/wasm/Cargo.toml`의 `wasm-bindgen` crate와 다른 판의
+  wasm-bindgen CLI를 실패시킨다. 그 CLI는 자기 판의 모듈만 읽기 때문이다(binding GN-18). `CARGOFLAGS`는 모든 cargo build에
   인자를 더한다. macOS에서 PHP 확장과 Node addon은 자기 런타임이 그것을 로드할 때 런타임의 기호를
   받는다. 그래서 `.cargo/config.toml`이 링커에게 그 기호를 정의하지 않은 채 두게 하고, recipe는 Cargo가 만든
   라이브러리를 플랫폼의 확장자(macOS `dylib`, Linux `so`)로 가리킨다.

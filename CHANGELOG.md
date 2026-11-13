@@ -1,5 +1,22 @@
 <!-- doc-id: changelog -->
 
+## Unreleased
+
+- `make test-bindings` builds and tests every target of the contract (binding BD-27): `make test-wasm` and `make
+  test-go` are added beside `make test-python`, `make test-node` and `make test-php`. `make test-wasm` runs the
+  generated tests and the new contract cases `packages/ts/tests/cases.wasm.test.mjs` on node --test through the subpath
+  `./wasm` of the installed package; the module and its glue are written by the wasm-bindgen CLI, whose release must be
+  that of the `wasm-bindgen` crate, before the package is packed, so `make test-node` and `make test-wasm` share the
+  step `node-package`. `make test-go` builds the static library with the features `panic-test` and `codec-test`, runs
+  gofmt and go vet, then the generated tests and the new contract cases `packages/go/tests/cases_test.go` on go test,
+  with the Go of the go directive of `packages/go/go.mod` and `GOTOOLCHAIN=local`. `make check-declarations` also
+  checks the declarations of the WASM binding. The variables `GO`, `GOFMT` and `WASM_BINDGEN` name the two tools. The
+  Go files `zz_generated_*.go` are tracked (binding GN-3), and `packages/ts/wasm/generated` and
+  `packages/go/internal/ffi/generated` are ignored. Before, no make target built or tested the Go and WASM bindings.
+  Every contract case passes on each of the five runners: unittest, node --test for Node and for WASM, PHPUnit and go
+  test. `make fmt-check` still fails on `packages/go/internal/ffi/src/lib.rs`, the line of 125 characters that binding
+  scaffold writes.
+
 - The contract names the five targets of binding (BD-27): `targets` of `packages/rust/interface.json` is php, python,
   node, go and wasm, `packages.go` names the Go module `github.com/polyspec/http-media-type/packages/go`, the entry `.`
   of the npm package takes the conditions `{node: napi, browser: wasm}`, each error class names its WASM class, the
