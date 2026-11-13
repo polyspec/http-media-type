@@ -1,5 +1,9 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ab976674a0afc5830b2b2e55d841d2b89d39d741fe54760761bd07f64c09d6b0 -->
+<!-- source-sha256: 1de38ec908fdba24fcc0acbf0f24bfe05f0d11f986bb35b22718fb9dfe6e0bc7 -->
+
+- `make test-php`와 `make lint-bindings`가 인자 없이 PHP를 찾는다. `PHP`와 `PHP_CONFIG`의 기본값은 `command -v`가
+  주는 경로다. 전에는 기본값이 이름 `php`뿐이었고, ext-php-rs는 그것을 파일의 경로로 읽어
+  "php executable not found at php"로 실패했다.
 
 - 추적하는 모든 문서는 영어 파일 `X.md`와 한국어 파일 `X.ko.md`의 쌍이다. `AGENTS.ko.md`와
   `docs/spec/media-type.ko.md`를 더한다. 쌍의 두 파일은 첫 줄에 같은 marker `doc-id`를 갖고,

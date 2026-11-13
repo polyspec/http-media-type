@@ -1,5 +1,9 @@
 <!-- doc-id: changelog -->
 
+- `make test-php` and `make lint-bindings` find PHP without an argument: the default of `PHP` and of `PHP_CONFIG` is
+  the path that `command -v` gives. Before, the default was the bare name `php`, which ext-php-rs reads as a path of a
+  file and fails with "php executable not found at php".
+
 - Every tracked document is a pair of an English file `X.md` and a Korean file `X.ko.md`. `AGENTS.ko.md` and
   `docs/spec/media-type.ko.md` are added. Both files of a pair hold the same marker `doc-id` in their first line, and
   the Korean file holds `source-sha256`, the sha256 of its English file, in its second line.

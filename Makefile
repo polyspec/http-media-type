@@ -7,9 +7,10 @@ CASES := $(CURDIR)/contracts/media-type.json
 VAR := $(CURDIR)/var
 export CARGO_TARGET_DIR ?= $(CURDIR)/target
 # The language runtimes. PHP is the binary whose headers the extension is built against (PHP_CONFIG) and that loads it.
+# Both are paths, because ext-php-rs reads PHP as the path of a file.
 PYTHON ?= python3.14
-PHP ?= php
-PHP_CONFIG ?= php-config
+PHP ?= $(shell command -v php)
+PHP_CONFIG ?= $(shell command -v php-config)
 PHPUNIT ?= vendor/bin/phpunit
 MATURIN := maturin==1.16.0
 # ext-php-rs reads them when it builds the extension.
