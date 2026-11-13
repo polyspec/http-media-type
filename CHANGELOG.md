@@ -2,14 +2,25 @@
 
 ## Unreleased
 
-- `Cargo.lock` pins `polyspec-binding-core` at the commit 49a4e97 of binding, and the binding crates are the ones that
-  binding scaffold of that commit writes (binding BD-9, GN-3d): each crate takes the lints of the workspace through
-  `[lints] workspace = true`, the attributes of `src/lib.rs` are formatted as `cargo fmt` writes them, and the PHP crate
-  has `build.rs`, which tells the macOS linker to leave the symbols of PHP undefined for its library alone, with
-  `test = false` and `doctest = false` in `[lib]`. `.cargo/config.toml` is removed: it gave the same link setting to
-  every crate of the workspace, the test executables of the core included. The Node addon takes it from
-  `napi_build::setup()` of its `build.rs`. The tracked Go tests `packages/go/media_type/zz_generated_test.go` are the ones that `make bindings` of that commit
-  writes.
+- CI and the release (AGENTS.md, "CI and release"): `.github/workflows/ci.yml` runs `make check`, `make test-bindings`
+  and `make release-coverage` on `ubuntu-26.04-arm` for the push of `main` and a manual run, in the jobs `core` and
+  `bindings`, and its last job `ci-passed` passes only when both passed. `.github/workflows/release.yml` tags the commit
+  of such a run with the version of the top section of `CHANGELOG.md` and creates its GitHub Release.
+  `config/release.json` classifies every package file: a tag releases the core crate `packages/rust` as a Git tag and is
+  the version of the binding manifests, and it releases no archive, because a binding is built per platform and the
+  release utility of kit 0.0.109 packs only npm packages, Composer source archives and pure Python wheels. The Makefile
+  adds `install-php-tools`, `ci-targets`, `ci-summary`, `ci-passed`, `release-tag`, `release-checkout`,
+  `release-prepare`, `release-tools`, `release-tools-path`, `release-assets`, `release-publish`, `release-undraft` and
+  `release-coverage`. Before, the repository had no CI and no release.
+
+- `Cargo.lock` pins `polyspec-binding-core` at a commit of the branch `v1/rust-core` of binding, and the binding crates
+  are the ones that binding scaffold of that commit writes (binding BD-9, GN-3d): each crate takes the lints of the
+  workspace through `[lints] workspace = true`, the attributes of `src/lib.rs` are formatted as `cargo fmt` writes them,
+  and the PHP crate has `build.rs`, which tells the macOS linker to leave the symbols of PHP undefined for its library
+  alone, with `test = false` and `doctest = false` in `[lib]`. `.cargo/config.toml` is removed: it gave the same link
+  setting to every crate of the workspace, the test executables of the core included. The Node addon takes it from
+  `napi_build::setup()` of its `build.rs`. The tracked Go tests `packages/go/media_type/zz_generated_test.go` are the
+  ones that `make bindings` of that commit writes.
 
 - The tools are pinned and installed into `var/tools` of the checkout as in binding: `mise.toml` and `mise.lock` pin
   Node.js 26.12.0, npm 12.2.0, Go 1.27.3, Python 3.14.8, Composer 2.10.3 and the wasm-bindgen CLI 0.2.130 with the

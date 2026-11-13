@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "repositoryUrl": "https://github.com/polyspec/http-media-type",
+  "changelog": "CHANGELOG.md",
+  "changelogTranslations": [
+    "CHANGELOG.ko.md"
+  ],
+  "packages": [],
+  "manifests": {
+    "Cargo.toml": "version",
+    "packages/rust/Cargo.toml": "git-tag",
+    "packages/python/Cargo.toml": "version",
+    "packages/python/pyproject.toml": "version",
+    "packages/ts/Cargo.toml": "version",
+    "packages/ts/package.json": "version",
+    "packages/ts/wasm/Cargo.toml": "version",
+    "packages/php-ext/Cargo.toml": "version",
+    "packages/go/internal/ffi/Cargo.toml": "version"
+  },
+  "notReleased": {
+    "package.json": "the private development root: the TypeScript compiler and @polyspec/kit of the checkout",
+    "composer.json": "the private development root: PHPUnit, which runs the tests of the PHP extension",
+    "packages/php-ext/composer.json": "the Composer manifest of the PHP extension, which carries no version; a binding package of the tagged tree, whose version binding scaffold writes from the version of the core; a tag releases no archive of it, because a binding is built per platform (an abi3 wheel, a PHP extension, an npm platform package, a Go static library) and the release utility of kit 0.0.109 packs only npm packages, Composer source archives and pure Python wheels",
+    "packages/go/go.mod": "the Go module of the binding, which links the static library of packages/go/internal/ffi; a binding package of the tagged tree, whose version binding scaffold writes from the version of the core; a tag releases no archive of it, because a binding is built per platform (an abi3 wheel, a PHP extension, an npm platform package, a Go static library) and the release utility of kit 0.0.109 packs only npm packages, Composer source archives and pure Python wheels"
+  },
+  "goModules": {},
+  "annotatedTags": true,
+  "packageFiles": [
+    "package.json",
+    "composer.json",
+    "Cargo.toml",
+    "pyproject.toml",
+    "go.mod",
+    "VERSION"
+  ],
+  "writtenFiles": [
+    ".mise/locks/**"
+  ]
+}

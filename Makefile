@@ -51,7 +51,8 @@ export PHP PHP_CONFIG
 CDYLIB := $(if $(filter Darwin,$(shell uname -s)),dylib,so)
 
 .PHONY: bootstrap install install-tools install-packages toolchain-lock check test lint lint-rust fmt-check bindings-check bindings test-bindings lint-bindings test-python test-node test-php \
-	test-wasm test-go node-package check-declarations
+	test-wasm test-go node-package check-declarations install-php-tools ci-targets ci-summary ci-passed release-tag release-checkout \
+	release-prepare release-tools release-tools-path release-assets release-publish release-undraft release-coverage
 
 # The npm that devEngines of package.json names installs the lock, @polyspec/kit included, before the tools of the checkout
 # exist. It runs outside the checkout with --prefix, since an npm of another release refuses a folder whose devEngines names
@@ -183,3 +184,66 @@ test-go: bindings
 	test -z "$$(cd packages/go && $(GOFMT) -l .)"
 	cd packages/go && $(GO_ENV) $(GO) vet ./...
 	cd packages/go && $(GO_ENV) HTTP_MEDIA_TYPE_CASES=$(CASES) $(GO) test -count=1 -v ./...
+
+# PHPUnit of composer.json, installed into vendor/ by the Composer of mise.toml from composer.lock; the PHP of
+# var/tools/bin runs it.
+COMPOSER := $(KIT_TOOLS)/mise/shims/composer
+install-php-tools:
+	$(ONLINE) $(COMPOSER) install --no-interaction --no-progress
+
+# ---- CI (.github/workflows/ci.yml) -------------------------------------------------------------------------------------
+# ci-targets runs TARGETS past failures with the utility of kit and writes CI_REPORT: the log of each target, record.json
+# and summary.md; ci-summary writes summary.md again, also for a run that stopped; ci-passed, the last job of the
+# workflow, fails unless every job of RESULTS, the JSON of toJSON(needs), has the result success.
+CI_REPORT ?= var/report/ci-targets
+ci-targets:
+	$(NODE) $(KIT)/ci-targets.mjs -k $(CI_REPORT) $(TARGETS)
+
+ci-summary:
+	$(NODE) $(KIT)/ci-targets.mjs --summary $(CI_REPORT)
+
+ci-passed:
+	$(NODE) $(KIT)/ci-passed.mjs
+
+# ---- Release (config/release.json, .github/workflows/release.yml) -----------------------------------------------------
+# The steps of release.yml, in this order: release-tag tags the commit of the successful CI run RUN of ci.yml on main with
+# vX.Y.Z of the top section of CHANGELOG.md and appends TAG and VERSION to GITHUB_ENV; release-checkout checks that tag
+# out; release-prepare and release-tools install what the packages of config/release.json need, and release-tools-path
+# puts var/tools/bin and the shims of mise on the PATH of the later steps; release-assets builds the archive of every
+# package into var/release/assets; release-publish creates the draft GitHub Release and release-undraft makes it public.
+# release-coverage requires every package file of the checkout to be classified in config/release.json.
+release-tag:
+	@test -n "$$RUN" || { echo "release-tag: RUN is required, for example make release-tag RUN=123"; exit 1; }
+	RELEASE_MAIN=origin/main $(NODE) $(KIT)/release-run.mjs tag "$$RUN"$(if $(AUTO), --auto)
+
+release-checkout:
+	@test -n "$$TAG" || { echo "release-checkout: TAG is required, for example make release-checkout TAG=v0.0.1"; exit 1; }
+	git checkout --quiet "$$TAG"
+
+# config/release.json releases no archive (see AGENTS.md, "Release"), so the release installs nothing before its tools.
+release-prepare:
+	@echo 'release-prepare: config/release.json releases no archive, so the release installs no dependency'
+
+release-tools:
+	$(ONLINE) $(NODE) $(KIT)/release-tools.mjs
+
+release-tools-path:
+	@test -n "$$GITHUB_PATH" && test -n "$$GITHUB_ENV" || { echo 'release-tools-path: GITHUB_PATH and GITHUB_ENV are set only between the steps of a workflow'; exit 1; }
+	printf '%s\n%s\n' "$(KIT_TOOLS)/bin" "$(KIT_TOOLS)/mise/shims" >> "$$GITHUB_PATH"
+	printf 'MISE_DATA_DIR=%s\nMISE_CACHE_DIR=%s\nMISE_STATE_DIR=%s\nMISE_CONFIG_DIR=%s\nMISE_GLOBAL_CONFIG_FILE=%s\nMISE_GLOBAL_CONFIG_ROOT=%s\n' \
+		"$(MISE_DATA_DIR)" "$(MISE_CACHE_DIR)" "$(MISE_STATE_DIR)" "$(MISE_CONFIG_DIR)" "$(MISE_GLOBAL_CONFIG_FILE)" "$(MISE_GLOBAL_CONFIG_ROOT)" >> "$$GITHUB_ENV"
+
+release-assets:
+	@test -n "$$TAG" || { echo "release-assets: TAG is required, for example make release-assets TAG=v0.0.1"; exit 1; }
+	RELEASE_ASSETS=var/release/assets $(ONLINE) $(NODE) $(KIT)/release.mjs assets "$$TAG"
+
+release-publish:
+	@test -n "$$TAG" || { echo "release-publish: TAG is required, for example make release-publish TAG=v0.0.1"; exit 1; }
+	RELEASE_ASSETS=var/release/assets RELEASE_RECORDS=var/release $(NODE) $(KIT)/release.mjs publish "$$TAG"
+
+release-undraft:
+	@test -n "$$TAG" || { echo "release-undraft: TAG is required, for example make release-undraft TAG=v0.0.1"; exit 1; }
+	RELEASE_RECORDS=var/release $(NODE) $(KIT)/release.mjs undraft "$$TAG"
+
+release-coverage:
+	$(NODE) $(KIT)/release.mjs coverage

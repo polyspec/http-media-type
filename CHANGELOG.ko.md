@@ -1,12 +1,22 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e1fe81a71f29541fd14858a60046ccfe2185afe2aa56d727bcccd4642b2dc54d -->
+<!-- source-sha256: 96c0a1f370382b24af5f8decc3793328ea6ce66763bb4b47a32017fc77596cc4 -->
 
 ## Unreleased
 
-- `Cargo.lock`은 `polyspec-binding-core`를 binding의 commit 49a4e97에 고정하고, binding crate는 그 commit의 binding
-  scaffold가 쓰는 것이다(binding BD-9, GN-3d). 각 crate는 `[lints] workspace = true`로 workspace의 lint를 받고,
-  `src/lib.rs`의 attribute는 `cargo fmt`가 쓰는 꼴로 정리되며, PHP crate는 macOS 링커에게 자기 라이브러리에 한해 PHP의
-  기호를 정의하지 않은 채 두라고 지시하는 `build.rs`를 갖고 `[lib]`에 `test = false`와 `doctest = false`를 갖는다.
+- CI와 release(AGENTS.md, "CI와 release"): `.github/workflows/ci.yml`은 `main`의 push와 수동 실행에서
+  `ubuntu-26.04-arm`으로 `make check`, `make test-bindings`, `make release-coverage`를 job `core`와 `bindings`에서
+  실행하고, 마지막 job `ci-passed`는 두 job이 통과했을 때만 통과한다. `.github/workflows/release.yml`은 그런 실행의
+  commit에 `CHANGELOG.md`의 맨 위 절의 version으로 tag를 붙이고 GitHub Release를 만든다. `config/release.json`은 모든
+  package 파일을 분류한다. tag는 코어 crate `packages/rust`를 Git tag로 release하고 binding manifest의 version이다.
+  archive는 release하지 않는다. 바인딩은 플랫폼마다 빌드되는데 kit 0.0.109의 release 도구는 npm package, Composer 소스
+  archive, 순수 Python wheel만 묶기 때문이다. Makefile은 `install-php-tools`, `ci-targets`, `ci-summary`, `ci-passed`,
+  `release-tag`, `release-checkout`, `release-prepare`, `release-tools`, `release-tools-path`, `release-assets`,
+  `release-publish`, `release-undraft`, `release-coverage`를 더한다. 전에는 이 저장소에 CI도 release도 없었다.
+
+- `Cargo.lock`은 `polyspec-binding-core`를 binding의 branch `v1/rust-core`의 한 commit에 고정하고, binding crate는 그
+  commit의 binding scaffold가 쓰는 것이다(binding BD-9, GN-3d). 각 crate는 `[lints] workspace = true`로 workspace의 lint를
+  받고, `src/lib.rs`의 attribute는 `cargo fmt`가 쓰는 꼴로 정리되며, PHP crate는 macOS 링커에게 자기 라이브러리에 한해
+  PHP의 기호를 정의하지 않은 채 두라고 지시하는 `build.rs`를 갖고 `[lib]`에 `test = false`와 `doctest = false`를 갖는다.
   `.cargo/config.toml`은 지운다. 그 파일은 같은 링크 설정을 core의 시험 실행 파일까지 workspace의 모든 crate에 주었다.
   Node addon은 그 설정을 자기 `build.rs`의 `napi_build::setup()`에서 받는다. 추적되는 Go 시험
   `packages/go/media_type/zz_generated_test.go`는 그 commit의 `make bindings`가 쓰는 것이다.

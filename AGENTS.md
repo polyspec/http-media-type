@@ -93,6 +93,30 @@ rules of this repository.
 - `make lint` runs `cargo fmt --check` and clippy of the core with every warning denied; `make check` runs both and
   `make bindings-check`.
 
+## CI and release
+
+- `.github/workflows/ci.yml` runs on the push of `main` and on a manual run, one job per matrix entry: `core` runs
+  `lint-rust`, `fmt-check`, `test`, `bindings-check` and `release-coverage`, and `bindings` runs the targets of `make
+  test-bindings`. Each job runs them with `make ci-targets`, which runs every target to its end and writes the report
+  `var/ci/<name>/`, and the last job `ci-passed` passes only when every other job passed. The jobs run on
+  `ubuntu-26.04-arm`, pin every action by its commit, set no `timeout-minutes` and run every command of a step as one
+  make target, so that the settings of the Makefile apply to it. `.github/actions/bootstrap` is the bootstrap of every
+  job, and `make install-php-tools` installs PHPUnit of `composer.lock` into `vendor/` with the Composer of `mise.toml`.
+- `config/release.json` classifies every package file, which `make release-coverage` checks. A tag `vX.Y.Z` releases the
+  core crate `packages/rust` as a Git tag, which a Cargo dependency names with `tag = "vX.Y.Z"`, and it is the version
+  of the binding manifests, which binding scaffold writes from the version of the core. A tag releases no archive and
+  tags no Go module: a binding is built per platform (an abi3 wheel, a PHP extension, an npm platform package, a Go
+  static library), and the release utility of kit 0.0.109 packs only npm packages, Composer source archives and pure
+  Python wheels.
+- A release is the commit of a successful push or manual run of `ci.yml` on `main`. The version-bump commit
+  `chore(release): Release X.Y.Z` sets the version of the core (`version` of `[workspace.package]` of the root
+  `Cargo.toml`), writes the binding manifests again with binding scaffold (`node scripts/binding.mts scaffold --contract
+  packages/rust/interface.json`), updates the versions of the local packages in `Cargo.lock` and renames `## Unreleased`
+  of both changelogs to `## X.Y.Z`, with a new empty `## Unreleased` above it. When the CI run of that push succeeds,
+  `.github/workflows/release.yml` starts by itself, and `gh workflow run release.yml -f run=<id>` starts it again: `make
+  release-tag` creates and pushes the annotated tag `vX.Y.Z` at that commit, and `make release-publish` and `make
+  release-undraft` create the GitHub Release. No tag is created by hand.
+
 ## Commits and changes
 
 - A commit message is `type(scope): Subject` with a type of feat, fix, docs, style, refactor, test or chore, a Subject

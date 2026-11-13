@@ -1,0 +1,84 @@
+# The checks of http-media-type on GitHub: the push of main and every manual run (workflow_dispatch) run one job per entry of the
+# matrix, and each entry runs its `targets` with `make ci-targets`. The entries together run every target of `make check`
+# and `make test-bindings`, each once, and `make release-coverage`. A failure never stops the run: the matrix does not
+# cancel the other entries (fail-fast: false), every step after the first runs after a failed step
+# (`if: ${{ !cancelled() }}`), and `make ci-targets` runs every target to its end. Each matrix job writes the job summary
+# and uploads its report var/ci/<name>/: the status, the first failure lines and the full log of each target. The last job,
+# ci-passed, passes only when every other job of this workflow passed; a release takes the id of such a run and tags its
+# commit (.github/workflows/release.yml). Every step that runs a command runs one make target, the jobs run on
+# ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit.
+#
+# Each job runs the bootstrap right after the checkout (uses: ./.github/actions/bootstrap), then installs every tool that
+# the checkout pins (mise.toml with mise.lock, rust-toolchain.toml, and the PHP of .php-version, which setup-php provides);
+# the entry that tests the PHP extension also installs PHPUnit of composer.lock. No job waits for another job or reads its build output.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: check (${{ matrix.name }})
+    runs-on: ubuntu-26.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: core
+            targets: lint-rust fmt-check test bindings-check release-coverage
+          - name: bindings
+            php: true
+            targets: lint-bindings check-declarations test-python test-node test-wasm test-php test-go
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        id: checkout
+      - uses: ./.github/actions/bootstrap
+        id: bootstrap
+        if: ${{ !cancelled() }}
+      # shivammathur/setup-php 2.40.0: the PHP of .php-version, which make install-tools wraps in var/tools/bin; every entry
+      # installs every tool of the checkout, so every entry sets it up.
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        id: php
+        if: ${{ !cancelled() }}
+        with:
+          php-version-file: .php-version
+          tools: none
+          coverage: none
+      - id: tools
+        if: ${{ !cancelled() }}
+        run: make install-tools
+      - id: php-tools
+        if: ${{ !cancelled() && matrix.php }}
+        run: make install-php-tools
+      - id: check
+        if: ${{ !cancelled() }}
+        run: make ci-targets TARGETS="${{ matrix.targets }}" CI_http-media-typeRT=var/ci/${{ matrix.name }}
+      - id: summary
+        if: ${{ !cancelled() }}
+        env:
+          CI_STEPS: ${{ toJSON(steps) }}
+        run: make ci-summary CI_http-media-typeRT=var/ci/${{ matrix.name }}
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        id: report
+        if: ${{ !cancelled() }}
+        with:
+          name: ci-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: var/ci/${{ matrix.name }}/
+          if-no-files-found: error
+  # The job that fails the run when any other job did not pass, so a release, which takes a successful run by its id,
+  # holds every job. It runs after every other job, also after a failed, skipped or cancelled one (if: always()), and
+  # make ci-passed fails unless every job of needs has the result success.
+  ci-passed:
+    if: ${{ always() }}
+    needs: [check]
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/bootstrap
+      - name: make ci-passed
+        run: make ci-passed RESULTS='${{ toJSON(needs) }}' FAIL_SKIPPED=1
