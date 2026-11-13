@@ -1,7 +1,14 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 94a0ba73d2bc5a3f686b21040d4e5c15cad9391292d36fba8684683bea4ab333 -->
+<!-- source-sha256: 3e6d13354ded3c2f241164cd982891f53b26d814a93078e3bfe3813ee581c525 -->
 
 ## Unreleased
+
+- `Cargo.lock`은 `polyspec-binding-core`를 binding의 commit 1bf0025에 고정하고, binding crate는 그 commit의 binding
+  scaffold가 쓰는 것이다(binding BD-9, GN-3d). 각 crate는 `[lints] workspace = true`로 workspace의 lint를 받고,
+  `src/lib.rs`의 attribute는 `cargo fmt`가 쓰는 꼴로 정리되며, PHP crate는 macOS 링커에게 자기 라이브러리에 한해 PHP의
+  기호를 정의하지 않은 채 두라고 지시하는 `build.rs`를 갖고 `[lib]`에 `test = false`와 `doctest = false`를 갖는다.
+  `.cargo/config.toml`은 지운다. 그 파일은 같은 링크 설정을 core의 시험 실행 파일까지 workspace의 모든 crate에 주었다.
+  Node addon은 그 설정을 자기 `build.rs`의 `napi_build::setup()`에서 받는다.
 
 - 도구가 binding처럼 고정되고 checkout의 `var/tools`에 설치된다. `mise.toml`과 `mise.lock`은 Node.js 26.12.0, npm
   12.2.0, Go 1.27.3, Python 3.14.8, Composer 2.10.3, wasm-bindgen CLI 0.2.130을 binding의 digest로 고정하고,

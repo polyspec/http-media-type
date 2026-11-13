@@ -1,4 +1,0 @@
-# A PHP extension and a Node addon resolve the symbols of their runtime when the runtime loads them, so the macOS
-# linker must leave those symbols undefined.
-[target.'cfg(target_os = "macos")']
-rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- `Cargo.lock` pins `polyspec-binding-core` at the commit 1bf0025 of binding, and the binding crates are the ones
+  that binding scaffold of that commit writes (binding BD-9, GN-3d): each crate takes the lints of the workspace through
+  `[lints] workspace = true`, the attributes of `src/lib.rs` are formatted as `cargo fmt` writes them, and the PHP crate
+  has `build.rs`, which tells the macOS linker to leave the symbols of PHP undefined for its library alone, with `test =
+  false` and `doctest = false` in `[lib]`. `.cargo/config.toml` is removed: it gave the same link setting to every crate
+  of the workspace, the test executables of the core included. The Node addon takes it from `napi_build::setup()` of
+  its `build.rs`.
+
 - The tools are pinned and installed into `var/tools` of the checkout as in binding: `mise.toml` and `mise.lock` pin
   Node.js 26.12.0, npm 12.2.0, Go 1.27.3, Python 3.14.8, Composer 2.10.3 and the wasm-bindgen CLI 0.2.130 with the
   digests of binding, `config/toolchain.json` pins mise 2026.10.10, `.php-version` names PHP 8.4, and
