@@ -45,10 +45,12 @@ rules of this repository.
 - `polyspec-binding-core` is a Git dependency of the core and of the binding crates (branch `v1/rust-core` of the
   binding repository) until binding is released; `Cargo.lock` pins its commit. The core implements
   `binding_core::Kinds` for its error (MT-8).
-- binding itself is the TypeScript tool of the same repository, which no registry holds yet. `scripts/binding.mts`
-  takes it from the checkout that Cargo made of the commit that `Cargo.lock` pins, copies it into
-  `var/binding/<commit>` and installs its dependencies there by its `package-lock.json`, so that the generator and
-  `binding_core` are one version. This holds only until the first release of binding.
+- binding itself is the TypeScript tool of the same repository, which no registry holds yet. `scripts/binding.mts` takes
+  it from the checkout that Cargo made of the commit that `Cargo.lock` pins, clones it into `var/binding/<commit>` and
+  installs its dependencies there by its `package-lock.json`, so that the generator and `binding_core` are one version.
+  The clone is a Git checkout of binding at that commit: binding check reads its own commit from it and compares it with
+  the commit of `Cargo.lock` (CK-20), which a copy of the files alone fails. This holds only until the first release of
+  binding.
 - A case of `contracts/media-type.json` follows the case convention of binding (G-5): its keys are the parameter names
   in snake_case (`media_type`), and a record is the object of its fields (a parameter is `{"name", "value"}`).
 - `make bindings` generates; every make target that builds or tests a binding runs it first. `make test-bindings` runs
