@@ -133,9 +133,10 @@ test-python: bindings
 	cd $(VAR) && HTTP_MEDIA_TYPE_CASES=$(CASES) venv/bin/python -m unittest discover -s $(CURDIR)/packages/python/tests -t $(CURDIR)/packages/python/tests
 
 # The package and the platform package of the addon, packed and installed into var/node. T-2: the addon is the npm
-# package of this machine's platform, which the package names in optionalDependencies; the recipe packs it as a release
-# does and installs both tarballs, without the other platforms' packages. The package also holds the WASM module and its
-# glue, which wasm-bindgen writes into packages/ts/wasm/generated before the package is packed (binding GN-18, P-5).
+# package of this machine's platform, which a release names in optionalDependencies of the manifest that it packs
+# (binding GN-3c); the recipe packs it as a release does and installs both tarballs, without the other platforms'
+# packages. The package also holds the WASM module and its glue, which wasm-bindgen writes into
+# packages/ts/wasm/generated before the package is packed (binding GN-18, P-5).
 PLATFORM := $(shell node -p 'process.platform + "-" + process.arch + (process.platform === "linux" ? "-gnu" : "")')
 NODE_ADDON := http-media-type.$(PLATFORM).node
 WASM_BINDGEN_RELEASE := $(shell sed -n 's/^wasm-bindgen = "=\(.*\)"$$/\1/p' packages/ts/wasm/Cargo.toml)

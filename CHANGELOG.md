@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- `Cargo.lock` pins `polyspec-binding-core` at the head of the branch `v1/rust-core` of binding, and the binding
+  packages are the ones that binding scaffold of that binding writes, so `make bindings-check` reports no finding.
+  Before, it reported the lock (CK-20) and nine files (CK-19). Each binding crate names the licence `MIT` of the core,
+  and so does `packages/python/pyproject.toml` (CK-71). `packages/python/build.rs` is new: it declares the cfg
+  `pyo3_disable_reference_pool`, with which the generated code refuses a build (binding GN-6u).
+  `packages/ts/package.json` has `"type": "module"`, `napi.binaryName` and `napi.targets` and no
+  `optionalDependencies`: a release writes the platform packages into the manifest that it packs, because a lock that
+  named them could not be installed before that release (binding GN-3c). `packages/php-ext/composer.json` names
+  `php-ext.download-url-method` `pre-packaged-binary`. The generated Go files `zz_generated_*.go` are no longer
+  tracked, and `.gitignore` names them: a release adds them and the static library of each platform in the commit of
+  its Go tag (binding GN-15g), and the tracked copies differed from what the pinned binding writes.
+
 - The release tags the Go module `packages/go` with `packages/go/vX.Y.Z` at the release commit: `goModules` of
   `config/release.json` names the module. Before, `goModules` was empty and the rules said that a tag tags no Go
   module; Go takes a module below the root of a repository only by a tag of that form, so no other repository could

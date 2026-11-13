@@ -1,7 +1,18 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a87b77eb4ebf2a5a92bf37ee106a90e93ac5eaff07ede591dc2e64ee6c2f9d4a -->
+<!-- source-sha256: 9e3a47f6bda732e8d0196bd354c148b574302e12fc82f0eb13c58650ee058f05 -->
 
 ## Unreleased
+
+- `Cargo.lock`은 `polyspec-binding-core`를 binding의 branch `v1/rust-core`의 head에 pin하고, 바인딩 package는 그
+  binding의 scaffold가 쓰는 것과 같다. 그래서 `make bindings-check`는 finding을 보고하지 않는다. 전에는 lock(CK-20)과
+  파일 아홉 개(CK-19)를 보고했다. 각 바인딩 crate는 코어의 licence `MIT`를 적고, `packages/python/pyproject.toml`도
+  적는다(CK-71). `packages/python/build.rs`가 새로 생겼다. 이 파일은 cfg `pyo3_disable_reference_pool`을 선언하고,
+  생성된 코드는 그 cfg가 있는 build를 거부한다(binding GN-6u). `packages/ts/package.json`에는 `"type": "module"`,
+  `napi.binaryName`, `napi.targets`가 있고 `optionalDependencies`는 없다. release가 자신이 pack하는 manifest에 플랫폼
+  package를 쓴다. 그 package를 적은 lock은 그 release 전에 설치할 수 없기 때문이다(binding GN-3c).
+  `packages/php-ext/composer.json`은 `php-ext.download-url-method`로 `pre-packaged-binary`를 적는다. 생성된 Go 파일
+  `zz_generated_*.go`는 더 이상 추적하지 않고 `.gitignore`가 그 파일들을 적는다. release가 그 파일들과 각 플랫폼의
+  정적 라이브러리를 Go tag의 commit에 더하고(binding GN-15g), 추적한 사본은 pin된 binding이 쓰는 것과 달랐다.
 
 - release는 release commit에 Go module `packages/go`를 `packages/go/vX.Y.Z`로 tag한다. `config/release.json`의
   `goModules`가 그 module을 가리킨다. 전에는 `goModules`가 비어 있었고 규칙은 tag가 Go module을 tag하지 않는다고 했다.

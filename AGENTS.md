@@ -62,8 +62,10 @@ rules of this repository.
   PHPUnit and go test. The contract cases are `packages/python/tests`, `packages/ts/tests/cases.test.mjs`,
   `packages/ts/tests/cases.wasm.test.mjs`, `packages/php-ext/tests` and `packages/go/tests`. A target that the
   generator cannot take stays a failing target with its cause; no target is left out or skipped (binding BD-27).
-- In the Go module binding owns the files `zz_generated_*.go` (binding GN-3); they are tracked, because a Go module is
-  fetched as source, and `make bindings` writes them again. `packages/ts/wasm/generated` and
+- In the Go module binding owns the files `zz_generated_*.go` (binding GN-3), which `make bindings` writes. They are
+  not tracked, and neither is a static library of `packages/go/internal/ffi/lib/<platform>`: a release adds both in the
+  commit of its Go tag, because Go fetches a module as the source of a tag (binding GN-15g, CK-19), and a tracked copy
+  would differ from what the pinned binding writes after every change of the pin. `packages/ts/wasm/generated` and
   `packages/go/internal/ffi/generated` are not tracked; wasm-bindgen writes the module and its glue into the first.
   The variables `PYTHON` (3.14 or later), `PHP`, `PHP_CONFIG`, `PHPUNIT`, `GO`, `GOFMT` and `WASM_BINDGEN` name the
   runtimes. `make test-go` fails a Go of another release than the go directive of `packages/go/go.mod` and runs it with

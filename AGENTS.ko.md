@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 4a6a87d331ccfc29c10bad059266e24264daa4e567805946f81d05b6cc3da75a -->
+<!-- source-sha256: a47352baa262502356ee6be61d514251bc2a3db764a2918a5e753327b800d050 -->
 # 개발
 
 모든 polyspec 저장소의 작업 원칙은 polyspec의 `PRINCIPLES.md`에 있다. 이 파일은 이 저장소의 규칙만
@@ -62,8 +62,10 @@
   `packages/python/tests`, `packages/ts/tests/cases.test.mjs`, `packages/ts/tests/cases.wasm.test.mjs`,
   `packages/php-ext/tests`, `packages/go/tests`다. 생성기가 받지 못하는 target은 원인과 함께 실패하는 target으로
   남는다. 어떤 target도 빠지거나 건너뛰지 않는다(binding BD-27).
-- Go 모듈에서 binding은 파일 `zz_generated_*.go`를 소유한다(binding GN-3). Go 모듈은 소스로 받아지므로 이 파일들은
-  추적되고, `make bindings`가 다시 쓴다. `packages/ts/wasm/generated`와 `packages/go/internal/ffi/generated`는 추적하지
+- Go 모듈에서 binding은 파일 `zz_generated_*.go`를 소유하고(binding GN-3), `make bindings`가 그 파일들을 쓴다. 이
+  파일들과 `packages/go/internal/ffi/lib/<platform>`의 정적 라이브러리는 추적하지 않는다. Go는 모듈을 tag의 소스로
+  받으므로 release가 둘을 Go tag의 commit에 더하고(binding GN-15g, CK-19), 추적한 사본은 pin이 바뀔 때마다 pin된
+  binding이 쓰는 것과 달라지기 때문이다. `packages/ts/wasm/generated`와 `packages/go/internal/ffi/generated`는 추적하지
   않는다. wasm-bindgen은 모듈과 그 glue를 앞의 디렉터리에 쓴다.
   변수 `PYTHON`(3.14 이상), `PHP`, `PHP_CONFIG`, `PHPUNIT`, `GO`, `GOFMT`, `WASM_BINDGEN`이 런타임을 가리킨다.
   `make test-go`는 `packages/go/go.mod`의 go 지시문과 다른 판의 Go를 실패시키고, toolchain을 받지 않도록

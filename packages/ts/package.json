@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "The http-media-type library of polyspec for Node and the browser",
   "license": "MIT",
+  "type": "module",
   "main": "./generated/index.cjs",
   "types": "./generated/index.d.ts",
   "exports": {
@@ -29,9 +30,12 @@
     "wasm/generated/*.d.ts",
     "wasm/generated/*.wasm"
   ],
-  "optionalDependencies": {
-    "@polyspec/http-media-type-linux-x64-gnu": "0.0.1",
-    "@polyspec/http-media-type-linux-arm64-gnu": "0.0.1",
-    "@polyspec/http-media-type-darwin-arm64": "0.0.1"
+  "napi": {
+    "binaryName": "http-media-type",
+    "targets": [
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-apple-darwin"
+    ]
   }
 }
