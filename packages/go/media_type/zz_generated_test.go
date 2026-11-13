@@ -22,6 +22,105 @@ func TestB8ParseRefusesValueAboveU00FF(t *testing.T) {
 	}
 }
 
+func TestGN13eParse(t *testing.T) {
+	t.Run("a_media_type_gives_its_type_subtype_and_parameters", func(t *testing.T) {
+		_, err := mediatype.Parse("Text/HTML; Charset=\"UTF-8\"")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("a_media_type_without_parameters_has_an_empty_list", func(t *testing.T) {
+		_, err := mediatype.Parse("application/json")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("the_parameters_keep_their_order", func(t *testing.T) {
+		_, err := mediatype.Parse("application/vnd.example+json;version=2;charset=utf-8")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("white_space_around_the_value_is_ignored", func(t *testing.T) {
+		_, err := mediatype.Parse(" \u0009text/html ; level=1\u0009 ")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("a_trailing_semicolon_is_an_empty_parameter", func(t *testing.T) {
+		_, err := mediatype.Parse("text/html;")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("obs_text_in_a_quoted_value_is_kept", func(t *testing.T) {
+		_, err := mediatype.Parse("text/plain;x=\"\u00e9\"")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("a_quoted_value_unquotes_its_pairs", func(t *testing.T) {
+		_, err := mediatype.Parse("text/plain;a=\"b\\\"c\\\\d\\e\"")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("a_quoted_token_reads_as_the_token", func(t *testing.T) {
+		_, err := mediatype.Parse("text/plain;format=\"flowed\"")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("an_empty_quoted_value_is_the_empty_value", func(t *testing.T) {
+		_, err := mediatype.Parse("text/plain;a=\"\"")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("a_quoted_value_keeps_spaces_tabs_and_separators", func(t *testing.T) {
+		_, err := mediatype.Parse("multipart/form-data; boundary=\"a b\u0009c,d;e=f\"")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("obs_text_after_a_backslash_is_kept", func(t *testing.T) {
+		_, err := mediatype.Parse("text/plain;a=\"\\\u00ff\"")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("every_tchar_is_a_token_value", func(t *testing.T) {
+		_, err := mediatype.Parse("text/plain;a=!#$%&'*+-.^_`|~09AZaz")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("a_token_that_holds_a_star_names_a_type", func(t *testing.T) {
+		_, err := mediatype.Parse("te*t/h*ml")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("a_parameter_named_like_q_is_a_parameter", func(t *testing.T) {
+		_, err := mediatype.Parse("text/html;qq=1")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("empty_parameters_and_the_white_space_around_semicolons_give_nothing", func(t *testing.T) {
+		_, err := mediatype.Parse("text/html \u0009; ;a=1 ;;\u0009b=2;")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("names_and_value_case", func(t *testing.T) {
+		_, err := mediatype.Parse("TEXT/PLAIN;FORMAT=Flowed")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+}
+
 func TestB4Parse(t *testing.T) {
 	t.Run("the_any_type_is_invalid", func(t *testing.T) {
 		_, err := mediatype.Parse("*/*")
@@ -496,6 +595,69 @@ func TestB3FormatRefusesMediaTypeSubtypeThatIsNotUTF8(t *testing.T) {
 	}
 }
 
+func TestGN13eFormat(t *testing.T) {
+	t.Run("a_media_type_without_parameters", func(t *testing.T) {
+		_, err := mediatype.Format(mediatype.MediaType{Type: "application", Subtype: "json", Parameters: []mediatype.Parameter{}})
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("each_parameter_follows_a_semicolon_and_a_space", func(t *testing.T) {
+		_, err := mediatype.Format(mediatype.MediaType{Type: "application", Subtype: "vnd.example+json", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "version", Value: "2"}, mediatype.Parameter{Name: "charset", Value: "utf-8"}}})
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("names_are_written_in_lower_case", func(t *testing.T) {
+		_, err := mediatype.Format(mediatype.MediaType{Type: "Text", Subtype: "HTML", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "Charset", Value: "UTF-8"}}})
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("a_token_value_is_written_unquoted", func(t *testing.T) {
+		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "a", Value: "!#$%&'*+-.^_`|~09AZaz"}}})
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("the_empty_value_is_quoted", func(t *testing.T) {
+		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "a", Value: ""}}})
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("a_value_with_separators_is_quoted", func(t *testing.T) {
+		_, err := mediatype.Format(mediatype.MediaType{Type: "multipart", Subtype: "form-data", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "boundary", Value: "a b,c;d=e/f"}}})
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("quote_and_backslash_are_escaped", func(t *testing.T) {
+		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "a", Value: "b\"c\\d\u0009e"}}})
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("obs_text_is_quoted_without_a_backslash", func(t *testing.T) {
+		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "a", Value: "\u00e9"}}})
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("a_token_that_holds_a_star_is_written", func(t *testing.T) {
+		_, err := mediatype.Format(mediatype.MediaType{Type: "te*t", Subtype: "h*ml", Parameters: []mediatype.Parameter{}})
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("a_charset_value_is_not_rewritten", func(t *testing.T) {
+		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "charset", Value: "UTF-8"}}})
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+}
+
 func TestB4Format(t *testing.T) {
 	t.Run("an_empty_type_is_invalid", func(t *testing.T) {
 		_, err := mediatype.Format(mediatype.MediaType{Type: "", Subtype: "html", Parameters: []mediatype.Parameter{}})
@@ -694,4 +856,55 @@ func TestB8SameValueRefusesRightAboveU00FF(t *testing.T) {
 			t.Fatalf("B-8: %q: %#v", bad, err)
 		}
 	}
+}
+
+func TestGN13eSameValue(t *testing.T) {
+	t.Run("equal_bytes_are_the_same_value", func(t *testing.T) {
+		_, err := mediatype.SameValue("version", "2", "2")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("the_empty_values_are_the_same", func(t *testing.T) {
+		_, err := mediatype.SameValue("a", "", "")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("another_parameter_compares_with_case", func(t *testing.T) {
+		_, err := mediatype.SameValue("format", "Flowed", "flowed")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("charset_values_compare_without_case", func(t *testing.T) {
+		_, err := mediatype.SameValue("charset", "UTF-8", "utf-8")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("the_charset_name_compares_without_case", func(t *testing.T) {
+		_, err := mediatype.SameValue("CharSet", "ISO-8859-1", "iso-8859-1")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("different_charsets_differ", func(t *testing.T) {
+		_, err := mediatype.SameValue("charset", "utf-8", "utf-16")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("obs_text_case_counts_in_a_charset", func(t *testing.T) {
+		_, err := mediatype.SameValue("charset", "\u00c9", "\u00e9")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
+	t.Run("a_name_that_only_holds_charset_compares_with_case", func(t *testing.T) {
+		_, err := mediatype.SameValue("charsets", "UTF-8", "utf-8")
+		if err != nil {
+			t.Fatalf("GN-13e: %v", err)
+		}
+	})
 }
