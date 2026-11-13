@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: a62a5c5c501bfb7c0b2c38603008ac3286172bf655ab75f070f071e3f0b6d5c5 -->
+<!-- source-sha256: f4bbd5ba357ee3befe8c287d343b06229ed7a0515e6645e5cdf2c3ea939930af -->
 # 개발
 
 모든 polyspec 저장소의 작업 원칙은 polyspec의 `PRINCIPLES.md`에 있다. 이 파일은 이 저장소의 규칙만
@@ -72,7 +72,14 @@
   인자를 더한다. macOS에서 PHP 확장과 Node addon은 자기 런타임이 그것을 로드할 때 런타임의 기호를
   받는다. 그래서 `.cargo/config.toml`이 링커에게 그 기호를 정의하지 않은 채 두게 하고, recipe는 Cargo가 만든
   라이브러리를 플랫폼의 확장자(macOS `dylib`, Linux `so`)로 가리킨다.
-- 개발 도구는 이 저장소의 의존성이다. TypeScript는 `package.json`에 있고 `package-lock.json`이 고정한다.
+- 도구는 추적되는 파일에 고정되고, binding처럼 checkout의 `var/tools`에 설치된다. `mise.toml`은 Node.js, npm, Go,
+  Python, Composer, wasm-bindgen CLI를 binding의 판으로 적고 `mise.lock`은 그 digest를 적는다. `config/toolchain.json`은
+  mise의 판과 digest를, `rust-toolchain.toml`은 target `wasm32-unknown-unknown`을 가진 Rust toolchain을, `.php-version`은
+  `var/tools/bin`의 wrapper가 실행하는 기계의 PHP를 적는다. 새 checkout은 `make bootstrap`을 실행해 `package.json`의
+  `devEngines`가 적는 npm으로 `package-lock.json`을 설치하고, 그다음 `@polyspec/kit`의 설치기를 실행하는 `make install`
+  (`make install-tools`)을 실행한다. 모든 recipe는 `var/tools/bin`과 mise의 shim을 `PATH` 앞에 두고 실행한다. `GO`,
+  `GOFMT`, `WASM_BINDGEN`은 mise의 shim을, `PHP`와 `PHP_CONFIG`는 `var/tools/bin`의 wrapper를 가리킨다.
+- 개발 도구는 이 저장소의 의존성이다. TypeScript와 `@polyspec/kit`은 `package.json`에 있고 `package-lock.json`이 고정한다.
   PHPUnit은 `composer.json`의 `require-dev`에 있고, `composer install`이 `vendor/`에 설치하며,
   `composer.lock`이 고정한다.
 

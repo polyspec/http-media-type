@@ -1,7 +1,16 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2b0bc91a7be2d6e73acebb5af906a2174603427044abb7c8ab1927c255ec50a4 -->
+<!-- source-sha256: 94a0ba73d2bc5a3f686b21040d4e5c15cad9391292d36fba8684683bea4ab333 -->
 
 ## Unreleased
+
+- 도구가 binding처럼 고정되고 checkout의 `var/tools`에 설치된다. `mise.toml`과 `mise.lock`은 Node.js 26.12.0, npm
+  12.2.0, Go 1.27.3, Python 3.14.8, Composer 2.10.3, wasm-bindgen CLI 0.2.130을 binding의 digest로 고정하고,
+  `config/toolchain.json`은 mise 2026.10.10을 고정하며, `.php-version`은 PHP 8.4를 적고, `rust-toolchain.toml`은
+  target `wasm32-unknown-unknown`을 더한다. `package.json`은 `devEngines`에 npm 12.2.0을 적고 `@polyspec/kit` 0.0.109를
+  더한다. binding의 recipe처럼 `make bootstrap`, `make install`, `make install-tools`, `make install-packages`, `make
+  toolchain-lock`이 그 설치기를 실행한다. 모든 recipe는 `var/tools/bin`과 mise의 shim을 `PATH` 앞에 두고 실행하며,
+  `GO`, `GOFMT`, `WASM_BINDGEN`, `PHP`, `PHP_CONFIG`는 `var/tools`의 도구를 가리킨다. 전에는 모든 recipe가 기계의
+  `PATH`가 가리키는 도구를 고정된 판 없이 실행했다.
 
 - `make test-bindings`가 계약의 모든 target을 빌드하고 시험한다(binding BD-27). `make test-python`, `make test-node`,
   `make test-php` 곁에 `make test-wasm`과 `make test-go`가 더해진다. `make test-wasm`은 생성된 시험과 새 contract case

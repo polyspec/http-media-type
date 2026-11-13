@@ -1,5 +1,5 @@
 <!-- doc-id: readme -->
-<!-- source-sha256: 9957d7cd23849d1952f308510270132852b23bf51cb5f7b6283847d57d955ca9 -->
+<!-- source-sha256: 67d09f3af8cf2d17fd67565056ec1477c3e5d990c885a2d113c8c3eee307de96 -->
 # http-media-type
 
 [English](README.md)
@@ -28,6 +28,8 @@ HTTP의 media type(RFC 9110 8.3.1절)과 그것을 쓰는 문법인 token, quote
 `HttpMediaType<Category>Error`를 가진다. 아직 배포하지 않는다.
 
 ```sh
+make bootstrap       # devEngines의 npm으로 @polyspec/kit을 포함한 package-lock.json 설치
+make install         # mise.toml, rust-toolchain.toml, .php-version의 도구를 var/tools에 설치
 make test            # 코어: contract case와 시험
 make lint            # 코어: rustfmt --check와 clippy -D warnings
 make bindings        # packages/*/generated에 바인딩 생성

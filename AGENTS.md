@@ -73,9 +73,17 @@ rules of this repository.
   arguments to every cargo build. On macOS a PHP extension and a Node addon take the symbols of their runtime when it
   loads them, so `.cargo/config.toml` tells the linker to leave them undefined, and the recipes name the library that
   Cargo builds by the extension of the platform (`dylib` on macOS, `so` on Linux).
-- The development tools are dependencies of the repository: TypeScript in `package.json`, pinned by `package-lock.json`,
-  and PHPUnit in `require-dev` of `composer.json`, installed into `vendor/` by `composer install` and pinned by
-  `composer.lock`.
+- The tools are pinned in tracked files and installed into `var/tools` of the checkout, as in binding: `mise.toml`
+  names Node.js, npm, Go, Python, Composer and the wasm-bindgen CLI at the releases of binding and `mise.lock` their
+  digests, `config/toolchain.json` the release of mise and its digests, `rust-toolchain.toml` the Rust toolchain with
+  the target `wasm32-unknown-unknown` and `.php-version` the PHP of the machine, which the wrappers of `var/tools/bin`
+  run. A fresh checkout runs `make bootstrap`, which installs `package-lock.json` with the npm of `devEngines` of
+  `package.json`, then `make install`, which runs the installers of `@polyspec/kit` (`make install-tools`). Every recipe
+  runs with `var/tools/bin` and the shims of mise first on `PATH`; `GO`, `GOFMT` and `WASM_BINDGEN` name the shims of
+  mise and `PHP` and `PHP_CONFIG` the wrappers of `var/tools/bin`.
+- The development tools are dependencies of the repository: TypeScript and `@polyspec/kit` in `package.json`, pinned by
+  `package-lock.json`, and PHPUnit in `require-dev` of `composer.json`, installed into `vendor/` by `composer install`
+  and pinned by `composer.lock`.
 
 ## Checks
 

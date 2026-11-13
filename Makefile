@@ -1,3 +1,27 @@
+# The tools of the checkout: the utilities of the installed @polyspec/kit (node_modules/@polyspec/kit) install the
+# toolchains of mise.toml, rust-toolchain.toml and .php-version into var/tools, as the recipes of binding do.
+KIT := $(CURDIR)/node_modules/@polyspec/kit/dist
+KIT_TOOLS := $(CURDIR)/var/tools
+NODE := $(KIT_TOOLS)/bin/node
+NPM := $(KIT_TOOLS)/bin/npm
+# The bootstrap installs the node of var/tools, so it starts with the Node.js of the machine.
+BOOTSTRAP_NODE := node
+# The mise that make install-tools TOOLS=npm installs keeps its data, cache, state and configuration in var/tools/mise and reads
+# mise.toml as its global configuration, whose [settings] state that it runs only what mise.lock pins; the shims of
+# var/tools/mise read these directories, so every recipe runs with them, and with var/tools/bin and the shims first on PATH.
+export MISE_DATA_DIR := $(KIT_TOOLS)/mise
+export MISE_CACHE_DIR := $(KIT_TOOLS)/mise/cache
+export MISE_STATE_DIR := $(KIT_TOOLS)/mise/state
+export MISE_CONFIG_DIR := $(KIT_TOOLS)/mise/config
+export MISE_GLOBAL_CONFIG_FILE := $(CURDIR)/mise.toml
+export MISE_GLOBAL_CONFIG_ROOT := $(CURDIR)
+export PATH := $(KIT_TOOLS)/bin:$(KIT_TOOLS)/mise/shims:$(PATH)
+# rustup installs no toolchain on first use, so a toolchain that make install-tools did not install fails instead of
+# being fetched.
+export RUSTUP_AUTO_INSTALL := 0
+# The recipes that download run their command with $(ONLINE); the repository sets no offline setting, so it lifts none.
+ONLINE :=
+
 CARGO := cargo
 # Extra arguments of every cargo build, for example --ignore-rust-version on a machine without the pinned release.
 CARGOFLAGS ?=
@@ -7,26 +31,60 @@ CASES := $(CURDIR)/contracts/media-type.json
 VAR := $(CURDIR)/var
 export CARGO_TARGET_DIR ?= $(CURDIR)/target
 # The language runtimes. PHP is the binary whose headers the extension is built against (PHP_CONFIG) and that loads it.
-# Both are paths, because ext-php-rs reads PHP as the path of a file.
+# Both are paths, because ext-php-rs reads PHP as the path of a file: the wrappers of var/tools/bin that make
+# install-tools writes for the PHP of .php-version. PYTHON is the Python of mise.toml, whose shim PATH names first.
 PYTHON ?= python3.14
-PHP ?= $(shell command -v php)
-PHP_CONFIG ?= $(shell command -v php-config)
+PHP ?= $(KIT_TOOLS)/bin/php
+PHP_CONFIG ?= $(KIT_TOOLS)/bin/php-config
 PHPUNIT ?= vendor/bin/phpunit
 MATURIN := maturin==1.16.0
 # The Go of the go directive of packages/go/go.mod and the wasm-bindgen CLI of the release of the wasm-bindgen crate of
-# packages/ts/wasm/Cargo.toml (binding GN-15, GN-18); test-go and node-package compare both releases before they use
-# them.
-GO ?= go
-GOFMT ?= gofmt
-WASM_BINDGEN ?= wasm-bindgen
+# packages/ts/wasm/Cargo.toml (binding GN-15, GN-18), both of mise.toml, which make install-tools installs into
+# var/tools/mise; test-go and node-package compare both releases before they use them.
+GO ?= $(KIT_TOOLS)/mise/shims/go
+GOFMT ?= $(KIT_TOOLS)/mise/shims/gofmt
+WASM_BINDGEN ?= $(KIT_TOOLS)/mise/shims/wasm-bindgen
 # ext-php-rs reads them when it builds the extension.
 export PHP PHP_CONFIG
 # The file name extension of a library that Cargo builds as a cdylib: dylib on macOS, so on Linux (AGENTS.md,
 # "Platforms").
 CDYLIB := $(if $(filter Darwin,$(shell uname -s)),dylib,so)
 
-.PHONY: check test lint lint-rust fmt-check bindings-check bindings test-bindings lint-bindings test-python test-node test-php \
+.PHONY: bootstrap install install-tools install-packages toolchain-lock check test lint lint-rust fmt-check bindings-check bindings test-bindings lint-bindings test-python test-node test-php \
 	test-wasm test-go node-package check-declarations
+
+# The npm that devEngines of package.json names installs the lock, @polyspec/kit included, before the tools of the checkout
+# exist. It runs outside the checkout with --prefix, since an npm of another release refuses a folder whose devEngines names
+# npm 12.2.0 (EBADDEVENGINES); npm reads allow-remote of the .npmrc of the checkout.
+BOOTSTRAP_NPM := $(abspath $(shell command -v npm))
+bootstrap:
+	root="$$PWD"; version="$$(node -p 'require("./package.json").devEngines.packageManager.version')"; \
+	cd "$${TMPDIR:-/tmp}" && npm_config_cache="$$root/var/bootstrap/npm-cache" "$(BOOTSTRAP_NPM)" exec --yes --package="npm@$$version" -- npm --prefix "$$root" ci --ignore-scripts
+
+# install installs, in order, the mise, node and npm of mise.toml, the packages of package-lock.json and the other tools:
+# those of mise.toml at the digests of mise.lock, the Rust toolchain of rust-toolchain.toml with its targets and the PHP
+# of the machine (.php-version), all into var/tools of this checkout.
+install:
+	$(MAKE) --no-print-directory install-tools TOOLS=npm
+	$(MAKE) --no-print-directory install-packages
+	$(MAKE) --no-print-directory install-tools
+
+# TOOLS=npm runs the bootstrap of kit, which imports only Node.js built-ins, with the Node.js of the machine; any other TOOLS
+# names tools of kit, such as go or rust, and no TOOLS installs every declared tool.
+install-tools:
+ifeq ($(TOOLS),npm)
+	$(ONLINE) $(BOOTSTRAP_NODE) $(KIT)/bootstrap/bootstrap.mjs
+else
+	$(ONLINE) $(NODE) $(KIT)/install-tools.mjs --no-self-update $(TOOLS)
+endif
+
+install-packages:
+	$(ONLINE) $(NPM) ci
+
+# toolchain-lock writes mise.lock with the mise of var/tools for the platforms of the deployment targets.
+TOOLCHAIN_LOCK_PLATFORMS := linux-x64,linux-arm64,macos-arm64
+toolchain-lock:
+	$(ONLINE) $(KIT_TOOLS)/bin/mise lock --global --platform $(TOOLCHAIN_LOCK_PLATFORMS)
 
 # The core and the contract; none of them needs the generator (binding design L-2).
 check: lint-rust fmt-check test bindings-check

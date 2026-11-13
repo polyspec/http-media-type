@@ -29,6 +29,8 @@ browser takes (the condition `browser` and the subpath `./wasm`), and the Go mod
 is published yet.
 
 ```sh
+make bootstrap       # package-lock.json, @polyspec/kit included, with the npm of devEngines
+make install         # the tools of mise.toml, rust-toolchain.toml and .php-version into var/tools
 make test            # the core: the contract cases and the tests
 make lint            # the core: rustfmt --check and clippy -D warnings
 make bindings        # generate the bindings into packages/*/generated

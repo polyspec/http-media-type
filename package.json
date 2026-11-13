@@ -1,9 +1,17 @@
 {
   "name": "http-media-type-development",
   "private": true,
-  "description": "The development tools of the repository: the TypeScript compiler that checks the generated declarations of the Node binding",
+  "description": "The development tools of the repository: the TypeScript compiler that checks the generated declarations of the Node binding, and the shared tools of polyspec (@polyspec/kit), which install the toolchains of mise.toml into var/tools",
   "license": "MIT",
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": "12.2.0",
+      "onFail": "error"
+    }
+  },
   "devDependencies": {
+    "@polyspec/kit": "https://github.com/polyspec/kit/releases/download/v0.0.109/polyspec-kit-0.0.109.tgz",
     "typescript": "7.0.2"
   }
 }

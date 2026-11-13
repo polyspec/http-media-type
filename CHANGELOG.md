@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- The tools are pinned and installed into `var/tools` of the checkout as in binding: `mise.toml` and `mise.lock` pin
+  Node.js 26.12.0, npm 12.2.0, Go 1.27.3, Python 3.14.8, Composer 2.10.3 and the wasm-bindgen CLI 0.2.130 with the
+  digests of binding, `config/toolchain.json` pins mise 2026.10.10, `.php-version` names PHP 8.4, and
+  `rust-toolchain.toml` adds the target `wasm32-unknown-unknown`. `package.json` names npm 12.2.0 in `devEngines` and
+  adds `@polyspec/kit` 0.0.109, whose installers `make bootstrap`, `make install`, `make install-tools`, `make
+  install-packages` and `make toolchain-lock` run, as the recipes of binding do. Every recipe runs with `var/tools/bin`
+  and the shims of mise first on `PATH`, and `GO`, `GOFMT`, `WASM_BINDGEN`, `PHP` and `PHP_CONFIG` name the tools of
+  `var/tools`. Before, every recipe ran the tools that the `PATH` of the machine named, at no pinned release.
+
 - `make test-bindings` builds and tests every target of the contract (binding BD-27): `make test-wasm` and `make
   test-go` are added beside `make test-python`, `make test-node` and `make test-php`. `make test-wasm` runs the
   generated tests and the new contract cases `packages/ts/tests/cases.wasm.test.mjs` on node --test through the subpath
