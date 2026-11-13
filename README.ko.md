@@ -1,3 +1,5 @@
+<!-- doc-id: readme -->
+<!-- source-sha256: 09c4941f28016ae8cecbe7be38757d6b0fc2cc9b641c1585ddae578d3b07b5c2 -->
 # http-media-type
 
 [English](README.md)

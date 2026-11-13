@@ -1,3 +1,8 @@
+<!-- doc-id: changelog -->
+
+- Every tracked document is a pair of an English file `X.md` and a Korean file `X.ko.md`. `AGENTS.ko.md` and
+  `docs/spec/media-type.ko.md` are added. Both files of a pair hold the same marker `doc-id` in their first line, and
+  the Korean file holds `source-sha256`, the sha256 of its English file, in its second line.
 
 - `composer.lock` is tracked, so `composer install` installs the PHPUnit that runs the tests of the PHP extension at one
   pinned version.
