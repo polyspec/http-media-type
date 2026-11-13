@@ -23,7 +23,7 @@ func echoLatin1(text string) (string, error) {
 	var zero string
 	enc := NewWriter()
 	enc.Text(text)
-	out, err := call(func(pointer *C.uint8_t, length C.size_t, result *C.polyspec_http_media_type_buffer) C.int32_t {
+	out, err := invoke(func(pointer *C.uint8_t, length C.size_t, result *C.polyspec_http_media_type_buffer) C.int32_t {
 		return C.polyspec_http_media_type__echo_latin1(pointer, length, result)
 	}, enc.Done())
 	if err != nil {

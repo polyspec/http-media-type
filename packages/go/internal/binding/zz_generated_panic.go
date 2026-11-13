@@ -22,7 +22,7 @@ import "C"
 // panicTest calls the entry point of the B-7 test, which panics in the core; the static library has it with the
 // feature panic-test.
 func panicTest() error {
-	_, err := call(func(pointer *C.uint8_t, length C.size_t, result *C.polyspec_http_media_type_buffer) C.int32_t {
+	_, err := invoke(func(pointer *C.uint8_t, length C.size_t, result *C.polyspec_http_media_type_buffer) C.int32_t {
 		return C.polyspec_http_media_type__panic_test(pointer, length, result)
 	}, nil)
 	return err

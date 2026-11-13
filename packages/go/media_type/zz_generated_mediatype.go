@@ -19,7 +19,7 @@ type MediaType struct {
 	Parameters []Parameter
 }
 
-// Parse calls the core function polyspec_http_media_type::parse (contract member media_types.parse).
+// Parse calls polyspec_http_media_type::parse (contract member media_types.parse).
 func Parse(value_ string) (MediaType, error) {
 	var zero0 MediaType
 	enc := binding.NewWriter()
@@ -43,7 +43,7 @@ func Parse(value_ string) (MediaType, error) {
 	return value0, nil
 }
 
-// Format calls the core function polyspec_http_media_type::format (contract member media_types.format).
+// Format calls polyspec_http_media_type::format (contract member media_types.format).
 func Format(mediaType MediaType) (string, error) {
 	var zero0 string
 	enc := binding.NewWriter()
@@ -67,7 +67,7 @@ func Format(mediaType MediaType) (string, error) {
 	return value0, nil
 }
 
-// SameValue calls the core function polyspec_http_media_type::same_value (contract member media_types.same_value).
+// SameValue calls polyspec_http_media_type::same_value (contract member media_types.same_value).
 func SameValue(name string, left string, right string) (bool, error) {
 	var zero0 bool
 	enc := binding.NewWriter()

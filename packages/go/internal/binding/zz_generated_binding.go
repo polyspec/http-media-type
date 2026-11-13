@@ -27,6 +27,7 @@ import "C"
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math"
 	"runtime"
 	"unsafe"
@@ -35,9 +36,9 @@ import (
 // entry is a function of the C ABI: the encoded arguments in, the encoded result or failure out, 0 or 1 back.
 type entry func(pointer *C.uint8_t, length C.size_t, result *C.polyspec_http_media_type_buffer) C.int32_t
 
-// call runs an entry with the encoded arguments and copies its result out of the buffer that Rust allocated, which it
-// then frees. The call returns when the core returns (wait none).
-func call(fn entry, args []byte) ([]byte, error) {
+// invoke runs an entry with the encoded arguments and copies its result out of the buffer that Rust allocated, which
+// it then frees. The call returns when the core returns (wait none).
+func invoke(fn entry, args []byte) ([]byte, error) {
 	var pointer *C.uint8_t
 	if len(args) > 0 {
 		pointer = (*C.uint8_t)(unsafe.Pointer(&args[0]))
@@ -58,21 +59,21 @@ func call(fn entry, args []byte) ([]byte, error) {
 
 // MediaTypeParse calls polyspec_http_media_type_media_type_parse with the encoded arguments (B-8).
 func MediaTypeParse(args []byte) ([]byte, error) {
-	return call(func(pointer *C.uint8_t, length C.size_t, result *C.polyspec_http_media_type_buffer) C.int32_t {
+	return invoke(func(pointer *C.uint8_t, length C.size_t, result *C.polyspec_http_media_type_buffer) C.int32_t {
 		return C.polyspec_http_media_type_media_type_parse(pointer, length, result)
 	}, args)
 }
 
 // MediaTypeFormat calls polyspec_http_media_type_media_type_format with the encoded arguments (B-8).
 func MediaTypeFormat(args []byte) ([]byte, error) {
-	return call(func(pointer *C.uint8_t, length C.size_t, result *C.polyspec_http_media_type_buffer) C.int32_t {
+	return invoke(func(pointer *C.uint8_t, length C.size_t, result *C.polyspec_http_media_type_buffer) C.int32_t {
 		return C.polyspec_http_media_type_media_type_format(pointer, length, result)
 	}, args)
 }
 
 // MediaTypeSameValue calls polyspec_http_media_type_media_type_same_value with the encoded arguments (B-8).
 func MediaTypeSameValue(args []byte) ([]byte, error) {
-	return call(func(pointer *C.uint8_t, length C.size_t, result *C.polyspec_http_media_type_buffer) C.int32_t {
+	return invoke(func(pointer *C.uint8_t, length C.size_t, result *C.polyspec_http_media_type_buffer) C.int32_t {
 		return C.polyspec_http_media_type_media_type_same_value(pointer, length, result)
 	}, args)
 }
@@ -125,8 +126,9 @@ func (w *Writer) Bytes(value []byte) {
 // Reader decodes the result of a call. A result that does not follow the encoding, which only a fault of the
 // generated code can make, fails Finish with kind internal.
 type Reader struct {
-	bytes  []byte
-	failed bool
+	bytes   []byte
+	failed  bool
+	problem string
 }
 
 // NewReader reads an encoded result.
@@ -196,8 +198,11 @@ func (r *Reader) Bytes() []byte {
 
 // Finish is nil when the result was read whole, and an error of kind internal otherwise.
 func (r *Reader) Finish() error {
+	if r.problem != "" {
+		return internalError(r.problem)
+	}
 	if r.failed || len(r.bytes) != 0 {
-		return malformed()
+		return Malformed()
 	}
 	return nil
 }
@@ -362,17 +367,32 @@ type failure struct {
 	hasStatus bool
 	errno     int
 	hasErrno  bool
-	cause     error
 }
 
-func malformed() error {
-	return &HTTPMediaTypeInternalError{failure{message: "internal error: the encoded result does not follow the encoding of the binding", kind: "internal"}}
+// Malformed is the error of a result that does not follow the encoding, which only a fault of the generated code
+// makes: kind internal.
+func Malformed() error {
+	return internalError("the encoded result does not follow the encoding of the binding")
 }
 
-// decodeFailure reads an encoded failure: the category, the message, the kind, the status and the errno.
+func internalError(detail string) error {
+	return &HTTPMediaTypeInternalError{failure{message: fmt.Sprintf("internal error: %s", detail), kind: "internal"}}
+}
+
+// finished is the error of a failure whose properties were read whole, or kind internal.
+func finished(err error, properties *Reader) error {
+	if properties.Finish() != nil {
+		return Malformed()
+	}
+	return err
+}
+
+// decodeFailure reads an encoded failure: the category, the message, the kind, the status, the errno, the class of
+// the kind with the properties of its unit (E-2, I-3), and the error that a Go callback returned (U-3), which the call
+// returns unchanged.
 func decodeFailure(bytes []byte) error {
 	r := NewReader(bytes)
-	category := r.take(1)
+	head := r.take(1)
 	f := failure{message: r.Text(), kind: r.Text()}
 	if r.Tag() {
 		f.status, f.hasStatus = int(r.Uint()), true
@@ -380,24 +400,44 @@ func decodeFailure(bytes []byte) error {
 	if r.Tag() {
 		f.errno, f.hasErrno = int(r.Int()), true
 	}
+	class := r.take(1)
+	properties := NewReader(r.Bytes())
+	var call, index uint64
+	present := r.Tag()
+	if present {
+		call, index = r.Uint(), r.Uint()
+	}
 	if r.Finish() != nil {
-		return malformed()
+		return Malformed()
 	}
-	switch category[0] {
+	if present {
+		return raisedError(call, index)
+	}
+	category := head[0]
+	switch class[0] {
 	case 0:
-		return &HTTPMediaTypeValueError{f}
-	case 1:
-		return &HTTPMediaTypeTypeError{f}
-	case 2:
-		return &HTTPMediaTypeIoError{f}
-	case 3:
-		return &HTTPMediaTypeStoreError{f}
-	case 4:
-		return &HTTPMediaTypeBusyError{f}
-	case 5:
-		return &HTTPMediaTypeInternalError{f}
+		switch category {
+		case 0:
+			return finished(&HTTPMediaTypeValueError{f}, properties)
+		case 1:
+			return finished(&HTTPMediaTypeTypeError{f}, properties)
+		case 2:
+			return finished(&HTTPMediaTypeIoError{f}, properties)
+		case 3:
+			return finished(&HTTPMediaTypeStoreError{f}, properties)
+		case 4:
+			return finished(&HTTPMediaTypeBusyError{f}, properties)
+		case 5:
+			return finished(&HTTPMediaTypeInternalError{f}, properties)
+		}
+
 	}
-	return malformed()
+	return Malformed()
+}
+
+// raisedError is never reached: no call of http-media-type runs Go code.
+func raisedError(call, index uint64) error {
+	return internalError(fmt.Sprintf("U-3: no call runs Go code (%d, %d)", call, index))
 }
 
 // HTTPMediaTypeValueError is an error of category value (E-7).
@@ -415,9 +455,6 @@ func (e *HTTPMediaTypeValueError) Status() (int, bool) { return e.status, e.hasS
 // Errno is the OS error number of an I/O failure, when there is one (B-4).
 func (e *HTTPMediaTypeValueError) Errno() (int, bool) { return e.errno, e.hasErrno }
 
-// Unwrap is the error of a callback that the failure carries, or nil (E-7).
-func (e *HTTPMediaTypeValueError) Unwrap() error { return e.cause }
-
 // HTTPMediaTypeTypeError is an error of category type (E-7).
 type HTTPMediaTypeTypeError struct{ failure }
 
@@ -432,9 +469,6 @@ func (e *HTTPMediaTypeTypeError) Status() (int, bool) { return e.status, e.hasSt
 
 // Errno is the OS error number of an I/O failure, when there is one (B-4).
 func (e *HTTPMediaTypeTypeError) Errno() (int, bool) { return e.errno, e.hasErrno }
-
-// Unwrap is the error of a callback that the failure carries, or nil (E-7).
-func (e *HTTPMediaTypeTypeError) Unwrap() error { return e.cause }
 
 // HTTPMediaTypeIoError is an error of category io (E-7).
 type HTTPMediaTypeIoError struct{ failure }
@@ -451,9 +485,6 @@ func (e *HTTPMediaTypeIoError) Status() (int, bool) { return e.status, e.hasStat
 // Errno is the OS error number of an I/O failure, when there is one (B-4).
 func (e *HTTPMediaTypeIoError) Errno() (int, bool) { return e.errno, e.hasErrno }
 
-// Unwrap is the error of a callback that the failure carries, or nil (E-7).
-func (e *HTTPMediaTypeIoError) Unwrap() error { return e.cause }
-
 // HTTPMediaTypeStoreError is an error of category store (E-7).
 type HTTPMediaTypeStoreError struct{ failure }
 
@@ -468,9 +499,6 @@ func (e *HTTPMediaTypeStoreError) Status() (int, bool) { return e.status, e.hasS
 
 // Errno is the OS error number of an I/O failure, when there is one (B-4).
 func (e *HTTPMediaTypeStoreError) Errno() (int, bool) { return e.errno, e.hasErrno }
-
-// Unwrap is the error of a callback that the failure carries, or nil (E-7).
-func (e *HTTPMediaTypeStoreError) Unwrap() error { return e.cause }
 
 // HTTPMediaTypeBusyError is an error of category busy (E-7).
 type HTTPMediaTypeBusyError struct{ failure }
@@ -487,9 +515,6 @@ func (e *HTTPMediaTypeBusyError) Status() (int, bool) { return e.status, e.hasSt
 // Errno is the OS error number of an I/O failure, when there is one (B-4).
 func (e *HTTPMediaTypeBusyError) Errno() (int, bool) { return e.errno, e.hasErrno }
 
-// Unwrap is the error of a callback that the failure carries, or nil (E-7).
-func (e *HTTPMediaTypeBusyError) Unwrap() error { return e.cause }
-
 // HTTPMediaTypeInternalError is an error of category internal (E-7).
 type HTTPMediaTypeInternalError struct{ failure }
 
@@ -504,6 +529,3 @@ func (e *HTTPMediaTypeInternalError) Status() (int, bool) { return e.status, e.h
 
 // Errno is the OS error number of an I/O failure, when there is one (B-4).
 func (e *HTTPMediaTypeInternalError) Errno() (int, bool) { return e.errno, e.hasErrno }
-
-// Unwrap is the error of a callback that the failure carries, or nil (E-7).
-func (e *HTTPMediaTypeInternalError) Unwrap() error { return e.cause }

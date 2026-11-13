@@ -15,12 +15,13 @@
 
 - `Cargo.lock` pins `polyspec-binding-core` at a commit of the branch `v1/rust-core` of binding, and the binding crates
   are the ones that binding scaffold of that commit writes (binding BD-9, GN-3d): each crate takes the lints of the
-  workspace through `[lints] workspace = true`, the attributes of `src/lib.rs` are formatted as `cargo fmt` writes them,
-  and the PHP crate has `build.rs`, which tells the macOS linker to leave the symbols of PHP undefined for its library
-  alone, with `test = false` and `doctest = false` in `[lib]`. `.cargo/config.toml` is removed: it gave the same link
-  setting to every crate of the workspace, the test executables of the core included. The Node addon takes it from
-  `napi_build::setup()` of its `build.rs`. The tracked Go tests `packages/go/media_type/zz_generated_test.go` are the
-  ones that `make bindings` of that commit writes.
+  workspace through `[lints] workspace = true`, each allow attribute of `src/lib.rs` is one line that names its rule as
+  the reason, with the reason in a comment above it, and the PHP crate has `build.rs`, which tells the macOS linker to
+  leave the symbols of PHP undefined for its library alone, with `test = false` and `doctest = false` in `[lib]`.
+  `.cargo/config.toml` is removed: it gave the same link setting to every crate of the workspace, the test executables
+  of the core included. The Node addon takes it from `napi_build::setup()` of its `build.rs`. The tracked Go files
+  `zz_generated_*.go` are the ones that `make bindings` of that commit writes. `make fmt-check` passes with the
+  `rustfmt.toml` of this repository, which had failed on the attributes that binding wrote over several lines.
 
 - The tools are pinned and installed into `var/tools` of the checkout as in binding: `mise.toml` and `mise.lock` pin
   Node.js 26.12.0, npm 12.2.0, Go 1.27.3, Python 3.14.8, Composer 2.10.3 and the wasm-bindgen CLI 0.2.130 with the

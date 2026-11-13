@@ -2,909 +2,983 @@
 // Run make bindings to write it again.
 
 // The generated tests of the Go package mediatype (G-5).
-package mediatype_test
+package mediatype
 
 import (
-	"errors"
 	"testing"
 
 	liberrors "github.com/polyspec/http-media-type/packages/go/errors"
-	mediatype "github.com/polyspec/http-media-type/packages/go/media_type"
 )
 
 func TestB8ParseRefusesValueAboveU00FF(t *testing.T) {
-	for _, bad := range []string{"\u0100", "\xff"} {
-		_, err := mediatype.Parse(bad)
-		var failure *liberrors.HTTPMediaTypeValueError
-		if !errors.As(err, &failure) || failure.Kind() != "invalid_text" {
-			t.Fatalf("B-8: %q: %#v", bad, err)
-		}
+	_, err := Parse("\u0100")
+	if failure, ok := err.(*liberrors.HTTPMediaTypeValueError); !ok || failure.Kind() != "invalid_text" {
+		t.Fatalf("B-8: %#v", err)
 	}
 }
 
-func TestGN13eParse(t *testing.T) {
-	t.Run("a_media_type_gives_its_type_subtype_and_parameters", func(t *testing.T) {
-		_, err := mediatype.Parse("Text/HTML; Charset=\"UTF-8\"")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("a_media_type_without_parameters_has_an_empty_list", func(t *testing.T) {
-		_, err := mediatype.Parse("application/json")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("the_parameters_keep_their_order", func(t *testing.T) {
-		_, err := mediatype.Parse("application/vnd.example+json;version=2;charset=utf-8")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("white_space_around_the_value_is_ignored", func(t *testing.T) {
-		_, err := mediatype.Parse(" \u0009text/html ; level=1\u0009 ")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("a_trailing_semicolon_is_an_empty_parameter", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("obs_text_in_a_quoted_value_is_kept", func(t *testing.T) {
-		_, err := mediatype.Parse("text/plain;x=\"\u00e9\"")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("a_quoted_value_unquotes_its_pairs", func(t *testing.T) {
-		_, err := mediatype.Parse("text/plain;a=\"b\\\"c\\\\d\\e\"")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("a_quoted_token_reads_as_the_token", func(t *testing.T) {
-		_, err := mediatype.Parse("text/plain;format=\"flowed\"")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("an_empty_quoted_value_is_the_empty_value", func(t *testing.T) {
-		_, err := mediatype.Parse("text/plain;a=\"\"")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("a_quoted_value_keeps_spaces_tabs_and_separators", func(t *testing.T) {
-		_, err := mediatype.Parse("multipart/form-data; boundary=\"a b\u0009c,d;e=f\"")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("obs_text_after_a_backslash_is_kept", func(t *testing.T) {
-		_, err := mediatype.Parse("text/plain;a=\"\\\u00ff\"")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("every_tchar_is_a_token_value", func(t *testing.T) {
-		_, err := mediatype.Parse("text/plain;a=!#$%&'*+-.^_`|~09AZaz")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("a_token_that_holds_a_star_names_a_type", func(t *testing.T) {
-		_, err := mediatype.Parse("te*t/h*ml")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("a_parameter_named_like_q_is_a_parameter", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;qq=1")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("empty_parameters_and_the_white_space_around_semicolons_give_nothing", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html \u0009; ;a=1 ;;\u0009b=2;")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("names_and_value_case", func(t *testing.T) {
-		_, err := mediatype.Parse("TEXT/PLAIN;FORMAT=Flowed")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
+func TestB8ParseRefusesValueThatIsNotUTF8(t *testing.T) {
+	_, err := Parse("\xff")
+	if failure, ok := err.(*liberrors.HTTPMediaTypeValueError); !ok || failure.Kind() != "invalid_text" {
+		t.Fatalf("B-8: %#v", err)
+	}
 }
 
-func TestB4Parse(t *testing.T) {
-	t.Run("the_any_type_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("*/*")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_type_range_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/*")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_q_parameter_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;Q=0.5")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_duplicate_parameter_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/plain;charset=utf-8;CHARSET=utf-8")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_missing_subtype_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("an_empty_value_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_list_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html, text/plain")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("an_unterminated_quoted_string_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("multipart/form-data; boundary=\"abc")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("text_after_a_parameter_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;a=b c")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_parameter_without_a_value_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;charset")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_wildcard_subtype_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("*/html")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_lower_case_q_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;q=1")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_duplicate_parameter_with_a_quoted_value_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/plain;charset=utf-8;charset=\"utf-8\"")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_missing_type_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("/html")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("an_empty_subtype_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_second_slash_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html/x")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_space_around_the_slash_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text /html")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("parameters_without_a_type_are_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse(";charset=utf-8")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_value_of_white_space_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse(" \u0009 ")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_space_before_the_equal_sign_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;a =1")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_space_after_the_equal_sign_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;a= 1")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("an_empty_parameter_value_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;a=")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_quoted_parameter_name_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;\"a\"=1")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_quote_after_a_token_value_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;a=b\"c\"")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("text_after_a_quoted_value_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;a=\"b\"c")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_backslash_at_the_end_of_a_quoted_string_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;a=\"b\\\"")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_control_byte_in_a_quoted_string_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;a=\"b\u0001\"")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_quoted_delete_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;a=\"\\\u007f\"")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_quoted_line_feed_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;a=\"b\\\u000a\"")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("obs_text_in_a_token_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("t\u00e9xt/html")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("obs_text_in_a_token_value_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;a=\u00e9")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_line_feed_after_the_value_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html\u000a")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_nul_byte_after_the_value_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html\u0000")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_no_break_space_before_the_value_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("\u00a0text/html")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_comma_after_the_parameters_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Parse("text/html;a=1;,")
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "malformed_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
+func TestB4ParseTheAnyTypeIsInvalid(t *testing.T) {
+	_, err := Parse("*/*")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
 }
 
-func TestB3FormatRefusesMediaTypeTypeThatIsNotUTF8(t *testing.T) {
-	_, err := mediatype.Format(mediatype.MediaType{Type: "\xff", Subtype: "a", Parameters: nil})
-	var failure *liberrors.HTTPMediaTypeValueError
-	if !errors.As(err, &failure) || failure.Kind() != "invalid_text" {
+func TestB4ParseATypeRangeIsInvalid(t *testing.T) {
+	_, err := Parse("text/*")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAQParameterIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;Q=0.5")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseADuplicateParameterIsInvalid(t *testing.T) {
+	_, err := Parse("text/plain;charset=utf-8;CHARSET=utf-8")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAMissingSubtypeIsInvalid(t *testing.T) {
+	_, err := Parse("text")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAnEmptyValueIsInvalid(t *testing.T) {
+	_, err := Parse("")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAListIsInvalid(t *testing.T) {
+	_, err := Parse("text/html, text/plain")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAnUnterminatedQuotedStringIsInvalid(t *testing.T) {
+	_, err := Parse("multipart/form-data; boundary=\"abc")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseTextAfterAParameterIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;a=b c")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAParameterWithoutAValueIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;charset")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAWildcardSubtypeIsInvalid(t *testing.T) {
+	_, err := Parse("*/html")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseALowerCaseQIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;q=1")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseADuplicateParameterWithAQuotedValueIsInvalid(t *testing.T) {
+	_, err := Parse("text/plain;charset=utf-8;charset=\"utf-8\"")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAMissingTypeIsInvalid(t *testing.T) {
+	_, err := Parse("/html")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAnEmptySubtypeIsInvalid(t *testing.T) {
+	_, err := Parse("text/")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseASecondSlashIsInvalid(t *testing.T) {
+	_, err := Parse("text/html/x")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseASpaceAroundTheSlashIsInvalid(t *testing.T) {
+	_, err := Parse("text /html")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseParametersWithoutATypeAreInvalid(t *testing.T) {
+	_, err := Parse(";charset=utf-8")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAValueOfWhiteSpaceIsInvalid(t *testing.T) {
+	_, err := Parse(" \u0009 ")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseASpaceBeforeTheEqualSignIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;a =1")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseASpaceAfterTheEqualSignIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;a= 1")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAnEmptyParameterValueIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;a=")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAQuotedParameterNameIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;\"a\"=1")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAQuoteAfterATokenValueIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;a=b\"c\"")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseTextAfterAQuotedValueIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;a=\"b\"c")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseABackslashAtTheEndOfAQuotedStringIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;a=\"b\\\"")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAControlByteInAQuotedStringIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;a=\"b\u0001\"")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAQuotedDeleteIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;a=\"\\\u007f\"")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseAQuotedLineFeedIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;a=\"b\\\u000a\"")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseObsTextInATokenIsInvalid(t *testing.T) {
+	_, err := Parse("t\u00e9xt/html")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseObsTextInATokenValueIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;a=\u00e9")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseALineFeedAfterTheValueIsInvalid(t *testing.T) {
+	_, err := Parse("text/html\u000a")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseANulByteAfterTheValueIsInvalid(t *testing.T) {
+	_, err := Parse("text/html\u0000")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseANoBreakSpaceBeforeTheValueIsInvalid(t *testing.T) {
+	_, err := Parse("\u00a0text/html")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4ParseACommaAfterTheParametersIsInvalid(t *testing.T) {
+	_, err := Parse("text/html;a=1;,")
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "malformed_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestGN13eParseAMediaTypeGivesItsTypeSubtypeAndParameters(t *testing.T) {
+	_, err := Parse("Text/HTML; Charset=\"UTF-8\"")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseAMediaTypeWithoutParametersHasAnEmptyList(t *testing.T) {
+	_, err := Parse("application/json")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseTheParametersKeepTheirOrder(t *testing.T) {
+	_, err := Parse("application/vnd.example+json;version=2;charset=utf-8")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseWhiteSpaceAroundTheValueIsIgnored(t *testing.T) {
+	_, err := Parse(" \u0009text/html ; level=1\u0009 ")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseATrailingSemicolonIsAnEmptyParameter(t *testing.T) {
+	_, err := Parse("text/html;")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseObsTextInAQuotedValueIsKept(t *testing.T) {
+	_, err := Parse("text/plain;x=\"\u00e9\"")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseAQuotedValueUnquotesItsPairs(t *testing.T) {
+	_, err := Parse("text/plain;a=\"b\\\"c\\\\d\\e\"")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseAQuotedTokenReadsAsTheToken(t *testing.T) {
+	_, err := Parse("text/plain;format=\"flowed\"")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseAnEmptyQuotedValueIsTheEmptyValue(t *testing.T) {
+	_, err := Parse("text/plain;a=\"\"")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseAQuotedValueKeepsSpacesTabsAndSeparators(t *testing.T) {
+	_, err := Parse("multipart/form-data; boundary=\"a b\u0009c,d;e=f\"")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseObsTextAfterABackslashIsKept(t *testing.T) {
+	_, err := Parse("text/plain;a=\"\\\u00ff\"")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseEveryTcharIsATokenValue(t *testing.T) {
+	_, err := Parse("text/plain;a=!#$%&'*+-.^_`|~09AZaz")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseATokenThatHoldsAStarNamesAType(t *testing.T) {
+	_, err := Parse("te*t/h*ml")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseAParameterNamedLikeQIsAParameter(t *testing.T) {
+	_, err := Parse("text/html;qq=1")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseEmptyParametersAndTheWhiteSpaceAroundSemicolonsGiveNothing(t *testing.T) {
+	_, err := Parse("text/html \u0009; ;a=1 ;;\u0009b=2;")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eParseNamesAndValueCase(t *testing.T) {
+	_, err := Parse("TEXT/PLAIN;FORMAT=Flowed")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestB3FormatRefusesTypeThatIsNotUTF8(t *testing.T) {
+	_, err := Format(MediaType{Type: "\xff", Subtype: "a", Parameters: nil})
+	if failure, ok := err.(*liberrors.HTTPMediaTypeValueError); !ok || failure.Kind() != "invalid_text" {
 		t.Fatalf("B-3: %#v", err)
 	}
 }
 
-func TestB3FormatRefusesMediaTypeSubtypeThatIsNotUTF8(t *testing.T) {
-	_, err := mediatype.Format(mediatype.MediaType{Type: "a", Subtype: "\xff", Parameters: nil})
-	var failure *liberrors.HTTPMediaTypeValueError
-	if !errors.As(err, &failure) || failure.Kind() != "invalid_text" {
+func TestB3FormatRefusesSubtypeThatIsNotUTF8(t *testing.T) {
+	_, err := Format(MediaType{Type: "a", Subtype: "\xff", Parameters: nil})
+	if failure, ok := err.(*liberrors.HTTPMediaTypeValueError); !ok || failure.Kind() != "invalid_text" {
 		t.Fatalf("B-3: %#v", err)
 	}
 }
 
-func TestGN13eFormat(t *testing.T) {
-	t.Run("a_media_type_without_parameters", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "application", Subtype: "json", Parameters: []mediatype.Parameter{}})
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("each_parameter_follows_a_semicolon_and_a_space", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "application", Subtype: "vnd.example+json", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "version", Value: "2"}, mediatype.Parameter{Name: "charset", Value: "utf-8"}}})
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("names_are_written_in_lower_case", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "Text", Subtype: "HTML", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "Charset", Value: "UTF-8"}}})
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("a_token_value_is_written_unquoted", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "a", Value: "!#$%&'*+-.^_`|~09AZaz"}}})
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("the_empty_value_is_quoted", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "a", Value: ""}}})
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("a_value_with_separators_is_quoted", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "multipart", Subtype: "form-data", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "boundary", Value: "a b,c;d=e/f"}}})
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("quote_and_backslash_are_escaped", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "a", Value: "b\"c\\d\u0009e"}}})
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("obs_text_is_quoted_without_a_backslash", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "a", Value: "\u00e9"}}})
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("a_token_that_holds_a_star_is_written", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "te*t", Subtype: "h*ml", Parameters: []mediatype.Parameter{}})
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("a_charset_value_is_not_rewritten", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "charset", Value: "UTF-8"}}})
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
+func TestB4FormatAnEmptyTypeIsInvalid(t *testing.T) {
+	_, err := Format(MediaType{Type: "", Subtype: "html", Parameters: []Parameter{}})
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "invalid_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
 }
 
-func TestB4Format(t *testing.T) {
-	t.Run("an_empty_type_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "", Subtype: "html", Parameters: []mediatype.Parameter{}})
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "invalid_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_type_with_a_space_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text ", Subtype: "html", Parameters: []mediatype.Parameter{}})
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "invalid_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_subtype_with_a_slash_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "html/x", Parameters: []mediatype.Parameter{}})
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "invalid_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("obs_text_in_a_type_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "t\u00e9xt", Subtype: "html", Parameters: []mediatype.Parameter{}})
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "invalid_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("the_wildcard_type_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "*", Subtype: "*", Parameters: []mediatype.Parameter{}})
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "invalid_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("the_wildcard_subtype_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "*", Parameters: []mediatype.Parameter{}})
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "invalid_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("an_empty_name_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "", Value: "1"}}})
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "invalid_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_name_with_an_equal_sign_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "a=b", Value: "1"}}})
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "invalid_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("the_name_q_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "Q", Value: "1"}}})
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "invalid_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("two_names_equal_without_case_are_invalid", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "a", Value: "1"}, mediatype.Parameter{Name: "A", Value: "2"}}})
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "invalid_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_nul_byte_in_a_value_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "a", Value: "b\u0000"}}})
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "invalid_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_line_feed_in_a_value_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "a", Value: "b\u000ac"}}})
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "invalid_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
-	t.Run("a_delete_in_a_value_is_invalid", func(t *testing.T) {
-		_, err := mediatype.Format(mediatype.MediaType{Type: "text", Subtype: "plain", Parameters: []mediatype.Parameter{mediatype.Parameter{Name: "a", Value: "\u007f"}}})
-		failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
-		if !ok || failure.Kind() != "invalid_media_type" {
-			t.Fatalf("B-4: %#v", err)
-		}
-		if _, ok := failure.Status(); ok {
-			t.Fatalf("B-4: the status of %#v", err)
-		}
-		if _, ok := failure.Errno(); ok {
-			t.Fatalf("B-4: the errno of %#v", err)
-		}
-	})
+func TestB4FormatATypeWithASpaceIsInvalid(t *testing.T) {
+	_, err := Format(MediaType{Type: "text ", Subtype: "html", Parameters: []Parameter{}})
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "invalid_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4FormatASubtypeWithASlashIsInvalid(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "html/x", Parameters: []Parameter{}})
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "invalid_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4FormatObsTextInATypeIsInvalid(t *testing.T) {
+	_, err := Format(MediaType{Type: "t\u00e9xt", Subtype: "html", Parameters: []Parameter{}})
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "invalid_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4FormatTheWildcardTypeIsInvalid(t *testing.T) {
+	_, err := Format(MediaType{Type: "*", Subtype: "*", Parameters: []Parameter{}})
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "invalid_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4FormatTheWildcardSubtypeIsInvalid(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "*", Parameters: []Parameter{}})
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "invalid_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4FormatAnEmptyNameIsInvalid(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "plain", Parameters: []Parameter{Parameter{Name: "", Value: "1"}}})
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "invalid_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4FormatANameWithAnEqualSignIsInvalid(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "plain", Parameters: []Parameter{Parameter{Name: "a=b", Value: "1"}}})
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "invalid_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4FormatTheNameQIsInvalid(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "plain", Parameters: []Parameter{Parameter{Name: "Q", Value: "1"}}})
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "invalid_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4FormatTwoNamesEqualWithoutCaseAreInvalid(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "plain", Parameters: []Parameter{Parameter{Name: "a", Value: "1"}, Parameter{Name: "A", Value: "2"}}})
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "invalid_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4FormatANulByteInAValueIsInvalid(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "plain", Parameters: []Parameter{Parameter{Name: "a", Value: "b\u0000"}}})
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "invalid_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4FormatALineFeedInAValueIsInvalid(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "plain", Parameters: []Parameter{Parameter{Name: "a", Value: "b\u000ac"}}})
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "invalid_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestB4FormatADeleteInAValueIsInvalid(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "plain", Parameters: []Parameter{Parameter{Name: "a", Value: "\u007f"}}})
+	failure, ok := err.(*liberrors.HTTPMediaTypeValueError)
+	if !ok || failure.Kind() != "invalid_media_type" {
+		t.Fatalf("B-4: %#v", err)
+	}
+	if _, ok := failure.Status(); ok {
+		t.Fatalf("B-4: the status of %#v", err)
+	}
+	if _, ok := failure.Errno(); ok {
+		t.Fatalf("B-4: the errno of %#v", err)
+	}
+}
+
+func TestGN13eFormatAMediaTypeWithoutParameters(t *testing.T) {
+	_, err := Format(MediaType{Type: "application", Subtype: "json", Parameters: []Parameter{}})
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eFormatEachParameterFollowsASemicolonAndASpace(t *testing.T) {
+	_, err := Format(MediaType{Type: "application", Subtype: "vnd.example+json", Parameters: []Parameter{Parameter{Name: "version", Value: "2"}, Parameter{Name: "charset", Value: "utf-8"}}})
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eFormatNamesAreWrittenInLowerCase(t *testing.T) {
+	_, err := Format(MediaType{Type: "Text", Subtype: "HTML", Parameters: []Parameter{Parameter{Name: "Charset", Value: "UTF-8"}}})
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eFormatATokenValueIsWrittenUnquoted(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "plain", Parameters: []Parameter{Parameter{Name: "a", Value: "!#$%&'*+-.^_`|~09AZaz"}}})
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eFormatTheEmptyValueIsQuoted(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "plain", Parameters: []Parameter{Parameter{Name: "a", Value: ""}}})
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eFormatAValueWithSeparatorsIsQuoted(t *testing.T) {
+	_, err := Format(MediaType{Type: "multipart", Subtype: "form-data", Parameters: []Parameter{Parameter{Name: "boundary", Value: "a b,c;d=e/f"}}})
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eFormatQuoteAndBackslashAreEscaped(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "plain", Parameters: []Parameter{Parameter{Name: "a", Value: "b\"c\\d\u0009e"}}})
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eFormatObsTextIsQuotedWithoutABackslash(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "plain", Parameters: []Parameter{Parameter{Name: "a", Value: "\u00e9"}}})
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eFormatATokenThatHoldsAStarIsWritten(t *testing.T) {
+	_, err := Format(MediaType{Type: "te*t", Subtype: "h*ml", Parameters: []Parameter{}})
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eFormatACharsetValueIsNotRewritten(t *testing.T) {
+	_, err := Format(MediaType{Type: "text", Subtype: "plain", Parameters: []Parameter{Parameter{Name: "charset", Value: "UTF-8"}}})
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
 }
 
 func TestB3SameValueRefusesNameThatIsNotUTF8(t *testing.T) {
-	_, err := mediatype.SameValue("\xff", "a", "a")
-	var failure *liberrors.HTTPMediaTypeValueError
-	if !errors.As(err, &failure) || failure.Kind() != "invalid_text" {
+	_, err := SameValue("\xff", "a", "a")
+	if failure, ok := err.(*liberrors.HTTPMediaTypeValueError); !ok || failure.Kind() != "invalid_text" {
 		t.Fatalf("B-3: %#v", err)
 	}
 }
 
 func TestB8SameValueRefusesLeftAboveU00FF(t *testing.T) {
-	for _, bad := range []string{"\u0100", "\xff"} {
-		_, err := mediatype.SameValue("a", bad, "a")
-		var failure *liberrors.HTTPMediaTypeValueError
-		if !errors.As(err, &failure) || failure.Kind() != "invalid_text" {
-			t.Fatalf("B-8: %q: %#v", bad, err)
-		}
+	_, err := SameValue("a", "\u0100", "a")
+	if failure, ok := err.(*liberrors.HTTPMediaTypeValueError); !ok || failure.Kind() != "invalid_text" {
+		t.Fatalf("B-8: %#v", err)
+	}
+}
+
+func TestB8SameValueRefusesLeftThatIsNotUTF8(t *testing.T) {
+	_, err := SameValue("a", "\xff", "a")
+	if failure, ok := err.(*liberrors.HTTPMediaTypeValueError); !ok || failure.Kind() != "invalid_text" {
+		t.Fatalf("B-8: %#v", err)
 	}
 }
 
 func TestB8SameValueRefusesRightAboveU00FF(t *testing.T) {
-	for _, bad := range []string{"\u0100", "\xff"} {
-		_, err := mediatype.SameValue("a", "a", bad)
-		var failure *liberrors.HTTPMediaTypeValueError
-		if !errors.As(err, &failure) || failure.Kind() != "invalid_text" {
-			t.Fatalf("B-8: %q: %#v", bad, err)
-		}
+	_, err := SameValue("a", "a", "\u0100")
+	if failure, ok := err.(*liberrors.HTTPMediaTypeValueError); !ok || failure.Kind() != "invalid_text" {
+		t.Fatalf("B-8: %#v", err)
 	}
 }
 
-func TestGN13eSameValue(t *testing.T) {
-	t.Run("equal_bytes_are_the_same_value", func(t *testing.T) {
-		_, err := mediatype.SameValue("version", "2", "2")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("the_empty_values_are_the_same", func(t *testing.T) {
-		_, err := mediatype.SameValue("a", "", "")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("another_parameter_compares_with_case", func(t *testing.T) {
-		_, err := mediatype.SameValue("format", "Flowed", "flowed")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("charset_values_compare_without_case", func(t *testing.T) {
-		_, err := mediatype.SameValue("charset", "UTF-8", "utf-8")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("the_charset_name_compares_without_case", func(t *testing.T) {
-		_, err := mediatype.SameValue("CharSet", "ISO-8859-1", "iso-8859-1")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("different_charsets_differ", func(t *testing.T) {
-		_, err := mediatype.SameValue("charset", "utf-8", "utf-16")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("obs_text_case_counts_in_a_charset", func(t *testing.T) {
-		_, err := mediatype.SameValue("charset", "\u00c9", "\u00e9")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
-	t.Run("a_name_that_only_holds_charset_compares_with_case", func(t *testing.T) {
-		_, err := mediatype.SameValue("charsets", "UTF-8", "utf-8")
-		if err != nil {
-			t.Fatalf("GN-13e: %v", err)
-		}
-	})
+func TestB8SameValueRefusesRightThatIsNotUTF8(t *testing.T) {
+	_, err := SameValue("a", "a", "\xff")
+	if failure, ok := err.(*liberrors.HTTPMediaTypeValueError); !ok || failure.Kind() != "invalid_text" {
+		t.Fatalf("B-8: %#v", err)
+	}
+}
+
+func TestGN13eSameValueEqualBytesAreTheSameValue(t *testing.T) {
+	_, err := SameValue("version", "2", "2")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eSameValueTheEmptyValuesAreTheSame(t *testing.T) {
+	_, err := SameValue("a", "", "")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eSameValueAnotherParameterComparesWithCase(t *testing.T) {
+	_, err := SameValue("format", "Flowed", "flowed")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eSameValueCharsetValuesCompareWithoutCase(t *testing.T) {
+	_, err := SameValue("charset", "UTF-8", "utf-8")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eSameValueTheCharsetNameComparesWithoutCase(t *testing.T) {
+	_, err := SameValue("CharSet", "ISO-8859-1", "iso-8859-1")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eSameValueDifferentCharsetsDiffer(t *testing.T) {
+	_, err := SameValue("charset", "utf-8", "utf-16")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eSameValueObsTextCaseCountsInACharset(t *testing.T) {
+	_, err := SameValue("charset", "\u00c9", "\u00e9")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
+}
+
+func TestGN13eSameValueANameThatOnlyHoldsCharsetComparesWithCase(t *testing.T) {
+	_, err := SameValue("charsets", "UTF-8", "utf-8")
+	if err != nil {
+		t.Fatalf("GN-13e: %v", err)
+	}
 }

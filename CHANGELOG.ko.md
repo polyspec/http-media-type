@@ -1,5 +1,5 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 96c0a1f370382b24af5f8decc3793328ea6ce66763bb4b47a32017fc77596cc4 -->
+<!-- source-sha256: cf05b51f0e4ed0cf9556c19acde3732ecd581ac84c450069adeeef96d369fb45 -->
 
 ## Unreleased
 
@@ -15,11 +15,12 @@
 
 - `Cargo.lock`은 `polyspec-binding-core`를 binding의 branch `v1/rust-core`의 한 commit에 고정하고, binding crate는 그
   commit의 binding scaffold가 쓰는 것이다(binding BD-9, GN-3d). 각 crate는 `[lints] workspace = true`로 workspace의 lint를
-  받고, `src/lib.rs`의 attribute는 `cargo fmt`가 쓰는 꼴로 정리되며, PHP crate는 macOS 링커에게 자기 라이브러리에 한해
-  PHP의 기호를 정의하지 않은 채 두라고 지시하는 `build.rs`를 갖고 `[lib]`에 `test = false`와 `doctest = false`를 갖는다.
-  `.cargo/config.toml`은 지운다. 그 파일은 같은 링크 설정을 core의 시험 실행 파일까지 workspace의 모든 crate에 주었다.
-  Node addon은 그 설정을 자기 `build.rs`의 `napi_build::setup()`에서 받는다. 추적되는 Go 시험
-  `packages/go/media_type/zz_generated_test.go`는 그 commit의 `make bindings`가 쓰는 것이다.
+  받고, `src/lib.rs`의 각 allow attribute는 자기 규칙을 reason으로 적는 한 줄이며 그 이유는 위의 주석에 있다. PHP crate는
+  macOS 링커에게 자기 라이브러리에 한해 PHP의 기호를 정의하지 않은 채 두라고 지시하는 `build.rs`를 갖고 `[lib]`에
+  `test = false`와 `doctest = false`를 갖는다. `.cargo/config.toml`은 지운다. 그 파일은 같은 링크 설정을 core의 시험 실행
+  파일까지 workspace의 모든 crate에 주었다. Node addon은 그 설정을 자기 `build.rs`의 `napi_build::setup()`에서 받는다.
+  추적되는 Go 파일 `zz_generated_*.go`는 그 commit의 `make bindings`가 쓰는 것이다. `make fmt-check`는 이 저장소의
+  `rustfmt.toml`로 통과한다. 전에는 binding이 여러 줄로 쓴 attribute에서 실패했다.
 
 - 도구가 binding처럼 고정되고 checkout의 `var/tools`에 설치된다. `mise.toml`과 `mise.lock`은 Node.js 26.12.0, npm
   12.2.0, Go 1.27.3, Python 3.14.8, Composer 2.10.3, wasm-bindgen CLI 0.2.130을 binding의 digest로 고정하고,
