@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: fb2052c8c67d94c4b4608fbeb02c91e31589e0fb1c9096694c9493dc54274a1f -->
+<!-- source-sha256: d876118cfc342f86fce6118c59c7309ce4d821024b74742310d919f966d31bb2 -->
 # 개발
 
 모든 polyspec 저장소의 작업 원칙은 polyspec의 `PRINCIPLES.md`에 있다. 이 파일은 이 저장소의 규칙만
@@ -40,8 +40,8 @@
 
 ## Bindings
 
-- 이 저장소는 하나의 Cargo workspace다. 코어 `packages/rust`와 바인딩 crate `packages/python`,
-  `packages/ts`, `packages/php-ext`로 이루어지며, 바인딩 crate는 `binding scaffold`가 쓰고 `make bindings-check`가 비교한다.
+- 이 저장소는 하나의 Cargo workspace다. 코어 `packages/rust`와 다섯 target(binding BD-27)의 바인딩 crate `packages/python`,
+  `packages/ts`, `packages/ts/wasm`, `packages/php-ext`, `packages/go/internal/ffi`(와 `packages/go/go.mod`)로 이루어지며, 바인딩 crate는 `binding scaffold`가 쓰고 `make bindings-check`가 비교한다.
   바인딩 crate의 `generated/`는 추적하지 않는다. 루트의 `Cargo.lock`이 모든 의존성을 고정한다.
 - `polyspec-binding-core`는 binding이 릴리스될 때까지 코어와 바인딩 crate의 Git 의존성이다(binding 저장소의
   `v1/rust-core` 브랜치). `Cargo.lock`이 그 커밋을 고정한다. 코어는 자기 오류에
@@ -57,6 +57,8 @@
 - `make bindings`가 생성한다. 바인딩을 빌드하거나 시험하는 모든 make target은 그것을 먼저 실행한다. `make test-bindings`는
   workspace 전체에 clippy를 실행하고, `make check-declarations`를 실행하고, 그다음 `make test-python`, `make test-node`, `make
   test-php`를 실행한다. 이 셋은 각각 binding이 생성한 시험과 `packages/<language>/tests`의 contract case를 실행한다.
+  Go와 WASM 바인딩을 빌드하거나 시험하는 make target은 아직 없고, binding의 end-to-end 검사(binding의 `make e2e`)만
+  그것들을 돌린다.
   변수 `PYTHON`(3.14 이상), `PHP`, `PHP_CONFIG`, `PHPUNIT`이 런타임을 가리킨다. `CARGOFLAGS`는 모든 cargo build에
   인자를 더한다. macOS에서 PHP 확장과 Node addon은 자기 런타임이 그것을 로드할 때 런타임의 기호를
   받는다. 그래서 `.cargo/config.toml`이 링커에게 그 기호를 정의하지 않은 채 두게 하고, recipe는 Cargo가 만든

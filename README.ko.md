@@ -1,5 +1,5 @@
 <!-- doc-id: readme -->
-<!-- source-sha256: 09c4941f28016ae8cecbe7be38757d6b0fc2cc9b641c1585ddae578d3b07b5c2 -->
+<!-- source-sha256: 9957d7cd23849d1952f308510270132852b23bf51cb5f7b6283847d57d955ca9 -->
 # http-media-type
 
 [English](README.md)
@@ -19,9 +19,11 @@ HTTP의 media type(RFC 9110 8.3.1절)과 그것을 쓰는 문법인 token, quote
 
 규칙은 [docs/spec/media-type.md](docs/spec/media-type.md), case는 [contracts/media-type.json](contracts/media-type.json),
 바인딩의 공개 API는 crate 패키지에 들어가는 [packages/rust/interface.json](packages/rust/interface.json)에 있다. 코어는
-`packages/rust`의 Rust crate이며, PHP, Python, Node 바인딩은 binding이 인터페이스 계약에서 생성한다: Composer 패키지
+`packages/rust`의 Rust crate이며, 모든 계약이 적는 다섯 target(binding BD-27)인 PHP, Python, Node, 브라우저(WASM), Go 바인딩은 binding이
+인터페이스 계약에서 생성한다: Composer 패키지
 `polyspec/http-media-type`(PHP 확장 `polyspec_http_media_type`), PyPI 패키지 `polyspec-http-media-type`(모듈
-`polyspec.http_media_type`, Python 3.14 이상), npm 패키지 `@polyspec/http-media-type`. 각각 `parse`, `format`,
+`polyspec.http_media_type`, Python 3.14 이상), npm 패키지 `@polyspec/http-media-type`(브라우저는 조건 `browser`와 subpath `./wasm`의 WASM entry를
+받는다), Go 모듈 `github.com/polyspec/http-media-type/packages/go`. 각각 `parse`, `format`,
 `sameValue`/`same_value`, record `MediaType`과 `Parameter`, `kind`와 `status`를 가진 오류 클래스
 `HttpMediaType<Category>Error`를 가진다. 아직 배포하지 않는다.
 

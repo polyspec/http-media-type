@@ -2,28 +2,30 @@
   "schema": "polyspec/interface@1",
   "library": "http-media-type",
   "core": {"crate": "polyspec-http-media-type", "path": "packages/rust"},
-  "targets": ["php", "python", "node"],
+  "targets": ["php", "python", "node", "go", "wasm"],
   "packages": {
     "php": {"package": "polyspec/http-media-type", "namespace": "Polyspec\\HttpMediaType"},
     "python": {"package": "polyspec-http-media-type", "module": "polyspec.http_media_type"},
-    "node": {"package": "@polyspec/http-media-type", "entries": {".": {"formats": ["import", "require"]}}}
+    "node": {"package": "@polyspec/http-media-type", "entries": {".": {"conditions": {"node": "napi", "browser": "wasm"}, "formats": ["import", "require"]}}},
+    "go": {"module": "github.com/polyspec/http-media-type/packages/go"}
   },
   "naming": {"exceptions": []},
   "types": {},
   "errors": {
     "classes": {
-      "value": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeValueError", "python": "HTTPMediaTypeValueError", "node": "HttpMediaTypeValueError"},
-      "type": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeTypeError", "python": "HTTPMediaTypeTypeError", "node": "HttpMediaTypeTypeError"},
-      "io": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeIoError", "python": "HTTPMediaTypeIoError", "node": "HttpMediaTypeIoError"},
-      "store": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeStoreError", "python": "HTTPMediaTypeStoreError", "node": "HttpMediaTypeStoreError"},
-      "busy": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeBusyError", "python": "HTTPMediaTypeBusyError", "node": "HttpMediaTypeBusyError"},
-      "internal": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeInternalError", "python": "HTTPMediaTypeInternalError", "node": "HttpMediaTypeInternalError"}
+      "value": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeValueError", "python": "HTTPMediaTypeValueError", "node": "HttpMediaTypeValueError", "wasm": "HttpMediaTypeValueError"},
+      "type": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeTypeError", "python": "HTTPMediaTypeTypeError", "node": "HttpMediaTypeTypeError", "wasm": "HttpMediaTypeTypeError"},
+      "io": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeIoError", "python": "HTTPMediaTypeIoError", "node": "HttpMediaTypeIoError", "wasm": "HttpMediaTypeIoError"},
+      "store": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeStoreError", "python": "HTTPMediaTypeStoreError", "node": "HttpMediaTypeStoreError", "wasm": "HttpMediaTypeStoreError"},
+      "busy": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeBusyError", "python": "HTTPMediaTypeBusyError", "node": "HttpMediaTypeBusyError", "wasm": "HttpMediaTypeBusyError"},
+      "internal": {"php": "Polyspec\\HttpMediaType\\HttpMediaTypeInternalError", "python": "HTTPMediaTypeInternalError", "node": "HttpMediaTypeInternalError", "wasm": "HttpMediaTypeInternalError"}
     },
     "fixed": [
       {"lang": "php", "class": "ArgumentCountError"},
       {"lang": "php", "class": "Error"},
       {"lang": "python", "class": "TypeError"},
-      {"lang": "node", "class": "TypeError"}
+      {"lang": "node", "class": "TypeError"},
+      {"lang": "wasm", "class": "TypeError"}
     ],
     "kinds": [
       {"variant": "polyspec_http_media_type::Error::MalformedMediaType", "category": "value"},

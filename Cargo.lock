@@ -1097,6 +1097,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "polyspec-http-media-type-go"
+version = "0.0.1"
+dependencies = [
+ "polyspec-binding-core",
+ "polyspec-http-media-type",
+]
+
+[[package]]
 name = "polyspec-http-media-type-node"
 version = "0.0.1"
 dependencies = [
@@ -1123,6 +1131,16 @@ dependencies = [
  "polyspec-binding-core",
  "polyspec-http-media-type",
  "pyo3",
+]
+
+[[package]]
+name = "polyspec-http-media-type-wasm"
+version = "0.0.1"
+dependencies = [
+ "js-sys",
+ "polyspec-binding-core",
+ "polyspec-http-media-type",
+ "wasm-bindgen",
 ]
 
 [[package]]
