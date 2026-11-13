@@ -1,5 +1,12 @@
 <!-- doc-id: changelog -->
 
+- `Cargo.lock` pins the binding whose generator holds the value aliases, the fault injection and the error units in one
+  line of development (CK-20), and the binding packages are those that its scaffold writes: each binding crate takes
+  `polyspec-binding-core` with the features `construct` and `lock`, and the lock gains `tokio` as a dependency of
+  `polyspec-binding-core`. The contract check has no finding. The generated sources gain a compile-time proof that each
+  error variant a member raises is a variant of `Error` (E-5), and the generated Node tests also check each raised error
+  with `instanceof` of its class. The behavior of the three packages is the same.
+
 - `make test-php` and `make lint-bindings` find PHP without an argument: the default of `PHP` and of `PHP_CONFIG` is
   the path that `command -v` gives. Before, the default was the bare name `php`, which ext-php-rs reads as a path of a
   file and fails with "php executable not found at php".
