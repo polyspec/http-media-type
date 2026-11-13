@@ -54,10 +54,12 @@ rules of this repository.
 - A case of `contracts/media-type.json` follows the case convention of binding (G-5): its keys are the parameter names
   in snake_case (`media_type`), and a record is the object of its fields (a parameter is `{"name", "value"}`).
 - `make bindings` generates; every make target that builds or tests a binding runs it first. `make test-bindings` runs
-  clippy on the whole workspace, `make check-declarations`, then `make test-python`, `make test-node` and
-  `make test-php`, each of which runs the tests that binding generates and the contract cases of
-  `packages/<language>/tests`. The variables `PYTHON` (3.14 or later), `PHP`, `PHP_CONFIG` and `PHPUNIT` name the
-  runtimes; `CARGOFLAGS` adds arguments to every cargo build.
+  clippy on the whole workspace, `make check-declarations`, then `make test-python`, `make test-node` and `make
+  test-php`, each of which runs the tests that binding generates and the contract cases of `packages/<language>/tests`.
+  The variables `PYTHON` (3.14 or later), `PHP`, `PHP_CONFIG` and `PHPUNIT` name the runtimes; `CARGOFLAGS` adds
+  arguments to every cargo build. On macOS a PHP extension and a Node addon take the symbols of their runtime when it
+  loads them, so `.cargo/config.toml` tells the linker to leave them undefined, and the recipes name the library that
+  Cargo builds by the extension of the platform (`dylib` on macOS, `so` on Linux).
 - The development tools are dependencies of the repository: TypeScript in `package.json`, pinned by
   `package-lock.json`, and PHPUnit in `require-dev` of `composer.json`, installed into `vendor/`; `composer.lock` is not
   tracked yet.
