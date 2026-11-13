@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- The release tags the Go module `packages/go` with `packages/go/vX.Y.Z` at the release commit: `goModules` of
+  `config/release.json` names the module. Before, `goModules` was empty and the rules said that a tag tags no Go
+  module; Go takes a module below the root of a repository only by a tag of that form, so no other repository could
+  require the module at a version (binding GN-15g). `make release-coverage` reports every package file classified.
+  `AGENTS.md` states what is open before the first release: `main` on `origin`, and the packages of the bindings, which
+  wait for kit 0.0.111 and a release of binding.
+
 - CI and the release (AGENTS.md, "CI and release"): `.github/workflows/ci.yml` runs `make check`, `make test-bindings`
   and `make release-coverage` on `ubuntu-26.04-arm` for the push of `main` and a manual run, in the jobs `core` and
   `bindings`, and its last job `ci-passed` passes only when both passed. `.github/workflows/release.yml` tags the commit

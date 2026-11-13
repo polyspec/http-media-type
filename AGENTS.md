@@ -104,10 +104,13 @@ rules of this repository.
   job, and `make install-php-tools` installs PHPUnit of `composer.lock` into `vendor/` with the Composer of `mise.toml`.
 - `config/release.json` classifies every package file, which `make release-coverage` checks. A tag `vX.Y.Z` releases the
   core crate `packages/rust` as a Git tag, which a Cargo dependency names with `tag = "vX.Y.Z"`, and it is the version
-  of the binding manifests, which binding scaffold writes from the version of the core. A tag releases no archive and
-  tags no Go module: a binding is built per platform (an abi3 wheel, a PHP extension, an npm platform package, a Go
-  static library), and the release utility of kit 0.0.109 packs only npm packages, Composer source archives and pure
-  Python wheels.
+  of the binding manifests, which binding scaffold writes from the version of the core. The release also tags the Go module
+  `packages/go` with `packages/go/vX.Y.Z` at the release commit (`goModules` of `config/release.json`), because Go
+  takes a module below the root of a repository by the tag of that form, and a repository whose Go binding names a
+  record of this one requires that module at that version (binding GN-15g). A tag releases no archive yet: a binding
+  is built per platform (an abi3 wheel, a PHP extension, an npm package with its platform packages, a Go static
+  library), and the release utility of kit 0.0.109 packs only npm packages, Composer source archives and pure Python
+  wheels.
 - A release is the commit of a successful push or manual run of `ci.yml` on `main`. The version-bump commit
   `chore(release): Release X.Y.Z` sets the version of the core (`version` of `[workspace.package]` of the root
   `Cargo.toml`), writes the binding manifests again with binding scaffold (`node scripts/binding.mts scaffold --contract
@@ -116,6 +119,12 @@ rules of this repository.
   `.github/workflows/release.yml` starts by itself, and `gh workflow run release.yml -f run=<id>` starts it again: `make
   release-tag` creates and pushes the annotated tag `vX.Y.Z` at that commit, and `make release-publish` and `make
   release-undraft` create the GitHub Release. No tag is created by hand.
+- Open before the first release, which is not complete without them: `origin` has no `main`, so the release pushes
+  `v1/rust-core` as `main` and makes `main` the default branch; and the packages of the bindings (the abi3 wheel, the
+  PHP extension, the npm package with its platform packages) are rows of `config/release.json` only when kit 0.0.111
+  and a release of binding exist, because kit 0.0.109 refuses their kinds. The branch `lane/release-wasm` holds those rows, the napi CLI of the npm platform packages and `make release-wasm`; it is
+  work that waits for the same two releases and is merged then, because with kit 0.0.109 and the pinned binding its
+  `make bindings-check` and `make release-coverage` fail.
 
 ## Commits and changes
 
