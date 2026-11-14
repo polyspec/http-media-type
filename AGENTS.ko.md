@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 738ae03f87751ab058d06588037e75c7a5901771eff735c0ad672158c50f30b2 -->
+<!-- source-sha256: 43acaf919616e6f81a71a766a187210e6fa46e54f0f6e36deade22fdc01b16fa -->
 # 개발
 
 모든 polyspec 저장소의 작업 원칙은 polyspec의 `PRINCIPLES.md`에 있다. 이 파일은 이 저장소의 규칙만
@@ -148,3 +148,8 @@
   본문이 온다.
 - 동작 변경, 그 spec, 그 case, 그리고 `CHANGELOG.md`와 `CHANGELOG.ko.md`의 `## Unreleased` 아래에 넣는 그 항목은
   하나의 변경이다.
+- 추적 파일은 이 저장소든 다른 저장소든 Git commit을 적지 않는다. 기록은 무엇이 바뀌었고 검사가 무엇을 냈는지를 적고,
+  의존은 `Cargo.lock`이 고정한 것("고정된 binding")이나 그 release로 가리킨다. commit id는 저장소 없이 읽는 사람에게
+  아무것도 알려 주지 않고, history가 다른 history와 합쳐지거나 다시 쓰이면 아무것도 가리키지 않는다. `v1/rust-core`를
+  `main`으로 옮길 때가 그렇다. commit으로 고정하는 파일은 예외다. lock 파일과 workflow의 action이다. `make
+  test-scripts`는 `tests/scripts/commits.test.mts`를 실행하며, 이 시험은 commit id를 가진 추적 파일을 실패로 본다.

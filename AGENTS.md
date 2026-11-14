@@ -154,3 +154,9 @@ rules of this repository.
   wrapped at 72 characters.
 - A behavior change, its spec, its cases and its entry under `## Unreleased` of `CHANGELOG.md` and `CHANGELOG.ko.md`
   are one change.
+- No tracked file names a Git commit, of this repository or of another: a record states what changed and what a
+  check gave, and names a dependency by what `Cargo.lock` pins ("the pinned binding") or by its release. A commit id
+  says nothing to a reader without the repository, and it names nothing after a history is joined with another or
+  written again, as the move of `v1/rust-core` onto `main` does. The files that pin by a commit are the exceptions:
+  the lock files and the actions of the workflows. `make test-scripts` runs `tests/scripts/commits.test.mts`, which
+  fails a tracked file that holds a commit id.
