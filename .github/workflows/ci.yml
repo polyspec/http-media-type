@@ -5,8 +5,9 @@
 # (`if: ${{ !cancelled() }}`), and `make ci-targets` runs every target to its end. Each matrix job writes the job summary
 # and uploads its report var/ci/<name>/: the status, the first failure lines and the full log of each target. The last job,
 # ci-passed, passes only when every other job of this workflow passed; a release takes the id of such a run and tags its
-# commit (.github/workflows/release.yml). Every step that runs a command runs one make target, the jobs run on
-# ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit.
+# commit (.github/workflows/release.yml). The job assets calls .github/workflows/assets.yml, which builds the assets of each
+# platform of the bindings as a release does. Every step that runs a command runs one make target, the jobs run on
+# ubuntu-26.04-arm but for the platform runners of assets.yml, the actions are pinned by commit and no step has a time limit.
 #
 # Each job runs the bootstrap right after the checkout (uses: ./.github/actions/bootstrap), then installs every tool that
 # the checkout pins (mise.toml with mise.lock, rust-toolchain.toml, and the PHP of .php-version, which setup-php provides);
@@ -75,12 +76,16 @@ jobs:
           name: ci-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: var/ci/${{ matrix.name }}/
           if-no-files-found: error
+  # The assets of each platform of the bindings, built from the commit of the run with the matrix of the release (binding
+  # GN-19a, GN-19i), so that an asset that does not build stops the release before a tag exists.
+  assets:
+    uses: ./.github/workflows/assets.yml
   # The job that fails the run when any other job did not pass, so a release, which takes a successful run by its id,
   # holds every job. It runs after every other job, also after a failed, skipped or cancelled one (if: always()), and
   # make ci-passed fails unless every job of needs has the result success.
   ci-passed:
     if: ${{ always() }}
-    needs: [check]
+    needs: [check, assets]
     runs-on: ubuntu-26.04-arm
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

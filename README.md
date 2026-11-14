@@ -25,8 +25,9 @@ in `packages/rust`; the PHP, Python, Node, browser (WASM) and Go bindings, the f
 `polyspec.http_media_type`, Python 3.14 or later), the npm package `@polyspec/http-media-type`, whose WASM entry the
 browser takes (the condition `browser` and the subpath `./wasm`), and the Go module
 `github.com/polyspec/http-media-type/packages/go`. Each has `parse`, `format` and `sameValue`/`same_value`, the records
-`MediaType` and `Parameter`, and the error classes `HttpMediaType<Category>Error` with `kind` and `status`. No release
-is published yet.
+`MediaType` and `Parameter`, and the error classes `HttpMediaType<Category>Error` with `kind` and `status`. From 0.0.2,
+the GitHub Release of each tag `vX.Y.Z` holds the packages of the bindings for `linux-x64-gnu`, `linux-arm64-gnu` and
+`darwin-arm64`, and the Go module has the tag `packages/go/vX.Y.Z`; no package registry holds them.
 
 ```sh
 make bootstrap       # package-lock.json, @polyspec/kit included, with the npm of devEngines

@@ -54,8 +54,8 @@ export PHP PHP_CONFIG
 CDYLIB := $(if $(filter Darwin,$(shell uname -s)),dylib,so)
 
 .PHONY: bootstrap install install-tools install-packages toolchain-lock install-binding check test lint lint-rust fmt-check bindings-check docs-check documents-stamp bindings test-bindings lint-bindings test-python test-node test-php \
-	test-wasm test-go node-package check-declarations install-php-tools test-scripts ci-targets ci-summary ci-passed release-tag release-checkout \
-	release-prepare release-tools release-tools-path release-assets release-publish release-undraft release-coverage
+	test-wasm test-go node-package check-declarations install-php-tools test-scripts ci-targets ci-summary ci-passed release-tag \
+	release-prepare release-tools release-tools-path release-assets release-publish release-undraft release-coverage release-tag-output
 
 # The npm that devEngines of package.json names installs the lock, @polyspec/kit included, before the tools of the checkout
 # exist. It runs outside the checkout with --prefix, since an npm of another release refuses a folder whose devEngines names
@@ -225,24 +225,47 @@ ci-summary:
 ci-passed:
 	$(NODE) $(KIT)/ci-passed.mjs
 
+# ---- Release recipes of the bindings (binding GN-19h) --------------------------------------------------------------------
+# binding release-recipes writes the recipes that build the assets of each platform (the Go static library, the abi3 wheel,
+# the PHP extension, the npm package with its platform packages) and that carry the Go module and upload the assets into
+# packages/release.mk, which is generated and not tracked; make release-recipes writes it again from the contract, and
+# binding check reports a Makefile that does not include it or that holds a recipe of its own for one of its targets
+# (CK-94). The recipes read BINDING_RUN, the command that starts binding, NODE and NPM, defined above, and UV, the uv of
+# mise.toml. BINDING_DEP is empty: the bootstrap installs binding from package-lock.json before any recipe runs, and a
+# prerequisite that installs it would download in a recipe that builds.
+BINDING_RUN := $(BINDING)
+BINDING_DEP :=
+UV := $(KIT_TOOLS)/mise/shims/uv
+.PHONY: release-recipes
+release-recipes:
+	$(BINDING_RUN) release-recipes --root .
+# The file is missing in a checkout until make release-recipes writes it, so the include is optional.
+-include packages/release.mk
+
 # ---- Release (config/release.json, .github/workflows/release.yml) -----------------------------------------------------
 # The steps of release.yml, in this order: release-tag tags the commit of the successful CI run RUN of ci.yml on main with
-# vX.Y.Z of the top section of CHANGELOG.md and appends TAG and VERSION to GITHUB_ENV; release-checkout checks that tag
-# out; release-prepare and release-tools install what the packages of config/release.json need, and release-tools-path
-# puts var/tools/bin and the shims of mise on the PATH of the later steps; release-assets builds the archive of every
-# package into var/release/assets; release-publish creates the draft GitHub Release and release-undraft makes it public.
+# vX.Y.Z of the top section of CHANGELOG.md and appends TAG and VERSION to GITHUB_ENV, and release-tag-output gives them
+# to the later jobs; the workflow assets.yml builds the assets of each platform from the tag; release-prepare and
+# release-tools install what the packages of config/release.json need, and release-tools-path puts var/tools/bin and the
+# shims of mise on the PATH of the later steps; release-assets builds the archive of every package into
+# var/release/assets; release-publish creates the draft GitHub Release; release-go-module and release-platform-assets of
+# packages/release.mk carry the Go module and upload the assets of each platform; release-undraft makes it public.
 # release-coverage requires every package file of the checkout to be classified in config/release.json.
 release-tag:
 	@test -n "$$RUN" || { echo "release-tag: RUN is required, for example make release-tag RUN=123"; exit 1; }
 	RELEASE_MAIN=origin/main $(NODE) $(KIT)/release-run.mjs tag "$$RUN"$(if $(AUTO), --auto)
 
-release-checkout:
-	@test -n "$$TAG" || { echo "release-checkout: TAG is required, for example make release-checkout TAG=v0.0.1"; exit 1; }
-	git checkout --quiet "$$TAG"
+# release-tag-output gives the later jobs of the release workflow the tag and the version that release-tag wrote into the
+# environment of its job (TAG, VERSION), through the outputs of the step (GITHUB_OUTPUT); both are empty when the run
+# releases nothing.
+release-tag-output:
+	@test -n "$$GITHUB_OUTPUT" || { echo 'release-tag-output: GITHUB_OUTPUT is set only in a step of a workflow' >&2; exit 2; }
+	printf 'tag=%s\nversion=%s\n' "$$TAG" "$$VERSION" >> "$$GITHUB_OUTPUT"
 
-# config/release.json releases no archive (see AGENTS.md, "Release"), so the release installs nothing before its tools.
+# The one archive of config/release.json is the Composer package of the PHP extension, whose composer.json requires no
+# package, so the release installs no dependency before its tools.
 release-prepare:
-	@echo 'release-prepare: config/release.json releases no archive, so the release installs no dependency'
+	@echo 'release-prepare: the Composer package of config/release.json requires no package, so the release installs no dependency'
 
 release-tools:
 	$(ONLINE) $(NODE) $(KIT)/release-tools.mjs

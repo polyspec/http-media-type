@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- The release holds the packages of the bindings per platform as assets of its GitHub Release. binding 0.0.3 writes
+  the release recipes of the contract (binding GN-19h): `make release-recipes` runs `binding release-recipes --root .`,
+  which writes the ignored file `packages/release.mk`, and the Makefile includes it after it defines `BINDING_RUN`,
+  `NODE`, `NPM`, `UV` and `BINDING_DEP`, so the repository keeps no recipe of its own. The new workflow
+  `.github/workflows/assets.yml` builds on `ubuntu-26.04`, `ubuntu-26.04-arm` and `macos-15` the static library of
+  the Go module, the abi3 wheel, the PHP extension for PHP 8.4 and 8.5 and the npm platform package of each platform,
+  and on `ubuntu-26.04-arm` the npm package with its WASM module (binding GN-19a, GN-19i). `ci.yml` calls it for every
+  run, and `release.yml` calls it for the tag, creates the draft release with the Composer package of the PHP extension,
+  carries the Go module with `make release-go-module`, uploads the assets with `make release-platform-assets` and makes
+  the release public. `config/release.json` releases the Composer package of `packages/php-ext` and no longer names
+  `packages/go` in `goModules`: the tag `packages/go/v0.0.1`, which kit set at the release commit, holds neither the
+  generated files nor the static libraries, so a consumer of the Go module could not build it, and `make
+  release-go-module` now tags the commit that adds them (binding GN-19f). The dependency on binding is the release
+  0.0.3 (`package.json`, `package-lock.json`, the tag `v0.0.3` of `polyspec-binding-core` of every Cargo manifest, and
+  `Cargo.lock`); `@napi-rs/cli` 3.10.12 is a devDependency, `config/toolchain.json` pins LLVM 21, `rust-toolchain.toml`
+  names `llvm-tools` and the musl targets of the Linux arches, and `mise.toml` with `mise.lock` names uv 0.12.24. The
+  target `release-checkout` is removed, since each job of the release checks out the tag. The new test
+  `tests/scripts/workflows.test.mts` checks the runners, the pins, the run steps and the order of the release steps.
+  Red: `binding check --release` reported `CK-94 includes no packages/release.mk` for the Makefile, and `make
+  test-scripts` failed the three tests of `workflows.test.mts`. Green: `binding check --release` gives no finding, `make
+  test-scripts` passes 11 tests, and `make docs-check` and `make release-coverage` pass.
+
 ## 0.0.1
 
 - binding is a released dependency. `polyspec-binding-core` of the core and of the binding crates names the tag

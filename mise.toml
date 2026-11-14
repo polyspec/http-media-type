@@ -17,9 +17,18 @@ python = "3.14.8"
 # maturin builds the Python wheel of make test-python: the binary of its GitHub release at the release of binding,
 # whose digest mise.lock pins, so that no recipe installs it from PyPI on first use.
 "github:PyO3/maturin" = "1.16.0"
+# uv builds the abi3 wheel of a release with maturin (make release-wheel, binding GN-19c).
+uv = "0.12.24"
 
-# The settings of mise of this checkout, which mise reads from this file (MISE_GLOBAL_CONFIG_FILE of the Makefile): mise
-# installs and runs only what mise.lock pins and installs nothing on first use.
+# The settings of mise and uv of this checkout, which mise reads from this file (MISE_GLOBAL_CONFIG_FILE of the Makefile):
+# mise installs and runs only what mise.lock pins and installs nothing on first use, and uv downloads no Python, takes the
+# Python of PATH, where the shims of mise come first, reads no uv.toml of the home and keeps its cache under var/tools.
 [settings]
 locked = true
 auto_install = false
+
+[env]
+UV_PYTHON_DOWNLOADS = "never"
+UV_PYTHON_PREFERENCE = "only-system"
+UV_NO_CONFIG = "1"
+UV_CACHE_DIR = "{{config_root}}/var/tools/mise/cache/uv"
