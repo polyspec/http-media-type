@@ -1,7 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b24f4f9ff60f7518f6842deb101995adb07f6cf785dc7c49587bdc5e7a8d5e2d -->
+<!-- source-sha256: e2e04976dcaf35fcd3fcccf20cdb97c069cdb8c0d3e590c6b1d35bfe5e5fbcdd -->
 
 ## Unreleased
+
+- 다음 release plan은 서로 일치하는 binding 0.0.7 generator와 core 의존성, PHP minor별로 독립 선택하는 asset job을
+  요구한다. 현재 release tree는 binding 0.0.5를 쓴다. 계획한 버전은 0.0.4이며 의존성 갱신, 생성된 target 검증,
+  공개는 대기 중인 task다.
 
 ## 0.0.3
 

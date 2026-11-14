@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The next release plan requires matching binding 0.0.7 generator and core dependencies and independently selectable
+  PHP-minor asset jobs. The current release tree uses binding 0.0.5. The planned version is 0.0.4; dependency updates,
+  generated target verification and publication remain waiting tasks.
+
 ## 0.0.3
 
 - The PHP minors for which a release builds the PHP extension are `phpExtension.minors` of `config/toolchain.json`
