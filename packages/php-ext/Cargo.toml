@@ -20,7 +20,7 @@ panic-test = []
 
 [dependencies]
 polyspec-http-media-type = { path = "../rust" }
-polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", tag = "v0.0.4", features = ["construct", "lock"] }
+polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", tag = "v0.0.5", features = ["construct", "lock"] }
 ext-php-rs = "=0.16.4"
 
 [lints]

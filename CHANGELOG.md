@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- binding is the release 0.0.5 in place of 0.0.4: `package.json` names its release asset, `package-lock.json` pins its
+  integrity, `polyspec-binding-core` of every Cargo manifest names the tag `v0.0.5`, binding scaffold of 0.0.5 wrote
+  the binding crates again, and `Cargo.lock` pins the commit of the tag. The recipe `release-wheel` of binding 0.0.4
+  built the wheels of the Linux runners with the tag `linux_<arch>`, and `release-platform-assets` refused them, so the
+  release 0.0.2 stopped with `var/release/assets/wheel/<name>-0.0.2-cp314-abi3-linux_aarch64.whl is no wheel of a
+  platform of the release` and stays a draft with the Composer package alone; binding 0.0.5 builds them for the policy
+  `manylinux_2_34` (binding B2.267). Verified: `binding check --release` gives no finding, and `make bindings-check`,
+  `make docs-check`, `make test-scripts` and `make release-coverage` pass.
+
 ## 0.0.2
 
 - binding is the release 0.0.4 in place of 0.0.3: `package.json` names its release asset, `package-lock.json` pins its
