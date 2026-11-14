@@ -69,8 +69,8 @@ jobs:
       - name: install the LLVM of config/toolchain.json
         if: ${{ !cancelled() }}
         run: make install-llvm
-      # shivammathur/setup-php 2.40.0: each PHP minor that the extension supports, with its php-config, which the build of
-      # the extension reads; make release-php-ext PHP=php resolves php on PATH, and each minor builds in its own target folder.
+      # shivammathur/setup-php 2.40.0: each PHP minor of phpExtension.minors of config/toolchain.json, in its order, with its
+      # php-config, which the build of the extension reads (tests/scripts/workflows.test.mts compares the steps with the list); make release-php-ext PHP=php resolves php on PATH, and each minor builds in its own target folder.
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         if: ${{ !cancelled() }}
         with:

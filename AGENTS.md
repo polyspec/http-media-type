@@ -136,7 +136,8 @@ rules of this repository.
   of the binding manifests, which binding scaffold writes from the version of the core. kit packs the Composer package
   of the PHP extension `packages/php-ext`, whose `composer.json` tells PIE to download a pre-packaged binary. The
   workflow `assets.yml` builds the assets of each platform with the recipes of binding: the static library of the Go
-  module, the abi3 wheel, the PHP extension for PHP 8.4 and 8.5, the npm platform package, and the npm package itself
+  module, the abi3 wheel, the PHP extension for each PHP minor of `phpExtension.minors` of `config/toolchain.json` (8.4
+  and 8.5; `make test-scripts` compares the steps of `assets.yml` with the list), the npm platform package, and the npm package itself
   with the WASM module. The Go module `packages/go` is not in `goModules`: `make release-go-module` makes the commit
   that adds the generated files and the static libraries to the tree of the tag, proves it with a consumer and tags it
   `packages/go/vX.Y.Z` (binding GN-19f), because a Go module whose tag holds neither cannot be built by a consumer.

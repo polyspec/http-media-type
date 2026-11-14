@@ -10,6 +10,9 @@
 //   - every run step is one make target that the Makefile defines, or that the release recipes define that it includes
 //     (packages/release.mk, which binding release-recipes writes and which is not tracked, binding GN-19h), with
 //     arguments NAME=value or expressions alone;
+//   - the job platform of assets.yml builds the PHP extension for each minor of phpExtension.minors of
+//     config/toolchain.json, in its order: one setup of that PHP followed by one `make release-php-ext PHP=php`, and for
+//     no other minor, so that the list of the minors that a release supports has one source;
 //   - the workflows ci and release call assets.yml (binding GN-19i), and the release job of release.yml downloads the
 //     assets of each platform and runs release-go-module and release-platform-assets after release-publish has created
 //     the draft release, and release-undraft last.
@@ -92,6 +95,22 @@ test('assets.yml builds each platform on its runner and the job npm, and ci and 
     assert.match(text, new RegExp(`run: make ${target}( |$)`, 'm'), target);
   for (const file of [CI, RELEASE]) assert.match(read(file), /^ {4}uses: \.\/\.github\/workflows\/assets\.yml$/m, file);
   assert.match(read(CI), /needs: \[[^\]]*\bassets\b[^\]]*\]/);
+});
+
+test('assets.yml builds the PHP extension for each minor of phpExtension.minors of config/toolchain.json', () => {
+  const minors = (JSON.parse(read('config/toolchain.json')) as { phpExtension?: { minors?: unknown } }).phpExtension?.minors;
+  assert.ok(Array.isArray(minors) && minors.length > 0 && minors.every((minor) => typeof minor === 'string' && /^[0-9]+\.[0-9]+$/.test(minor)), `config/toolchain.json: phpExtension.minors is ${JSON.stringify(minors)}, not a list of PHP minors`);
+  const lines = read(ASSETS).split('\n');
+  const start = lines.indexOf('  platform:');
+  const end = lines.findIndex((line, index) => index > start && /^ {2}[a-z][a-z0-9_-]*:$/.test(line));
+  assert.ok(start >= 0, `${ASSETS} has no job platform`);
+  const steps = lines.slice(start, end < 0 ? undefined : end).flatMap((line) => {
+    const version = /^ +php-version: '?([0-9.]+)'?$/.exec(line)?.[1];
+    if (version !== undefined) return [`setup ${version}`];
+    if (/^ +php-version-file:/.test(line)) return ['setup of .php-version'];
+    return /^ +run: make release-php-ext( |$)/.test(line) ? ['build'] : [];
+  });
+  assert.deepEqual(steps, minors.flatMap((minor) => [`setup ${String(minor)}`, 'build']));
 });
 
 test('release.yml uploads the assets of each platform to the draft release before it makes the release public', () => {

@@ -1,7 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f305e927c87048be92d8a3e87ec4e06d95d936c36bacf87810f1514f65424d29 -->
+<!-- source-sha256: 18fc5cf6229493a1a959bde76fa3632edf84587ef322bac6ef3dbfffd8dffbe0 -->
 
 ## Unreleased
+
+- release가 PHP 확장을 빌드하는 PHP minor는 `config/toolchain.json`의 `phpExtension.minors`(8.4와 8.5)이고,
+  `tests/scripts/workflows.test.mts`는 `assets.yml`의 job `platform`에 각 minor마다 PHP setup 하나와 그 뒤의 `make
+  release-php-ext PHP=php` 하나를 목록의 순서로 요구하고 다른 minor는 허용하지 않는다. 전에는 minor가 `assets.yml`에만
+  적혀 있었다. Red: 새 시험은 `config/toolchain.json`에 목록이 없을 때 실패했고, 목록 `["8.4"]`와 8.5 대신 8.6을 setup하는
+  `assets.yml`에서 실패한다. Green: `make test-scripts`가 시험 12개를 통과한다.
 
 - binding 의존은 0.0.4 대신 release 0.0.5다. `package.json`이 그 release asset을 적고, `package-lock.json`이 그 integrity를
   고정하며, 모든 Cargo manifest의 `polyspec-binding-core`가 tag `v0.0.5`를 적고, 0.0.5의 binding scaffold가 바인딩

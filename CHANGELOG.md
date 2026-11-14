@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- The PHP minors for which a release builds the PHP extension are `phpExtension.minors` of `config/toolchain.json`
+  (8.4 and 8.5), and `tests/scripts/workflows.test.mts` requires one setup of each minor followed by one `make
+  release-php-ext PHP=php` in the job `platform` of `assets.yml`, in the order of the list and for no other minor.
+  Before, the minors were written only in `assets.yml`. Red: the new test failed while `config/toolchain.json` had no
+  list, and fails for the list `["8.4"]` and for an `assets.yml` that sets up 8.6 in place of 8.5. Green: `make
+  test-scripts` passes 12 tests.
+
 - binding is the release 0.0.5 in place of 0.0.4: `package.json` names its release asset, `package-lock.json` pins its
   integrity, `polyspec-binding-core` of every Cargo manifest names the tag `v0.0.5`, binding scaffold of 0.0.5 wrote
   the binding crates again, and `Cargo.lock` pins the commit of the tag. The recipe `release-wheel` of binding 0.0.4

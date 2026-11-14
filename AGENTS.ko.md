@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 18f66a0d2b855bc973a3a1a0a103d983c803ff0ea56fd3ec8ec7261467bac7e4 -->
+<!-- source-sha256: dc998603163ebd4a833aa1e40c288a850f20d3868fef894dd6f2c839bc3b9408 -->
 # 개발
 
 모든 polyspec 저장소의 작업 원칙은 polyspec의 `PRINCIPLES.md`에 있다. 이 파일은 이 저장소의 규칙만
@@ -130,7 +130,8 @@
   manifest의 version이기도 하며, binding scaffold가 코어의 version으로 그 manifest를 쓴다. kit은 PHP 확장
   `packages/php-ext`의 Composer package를 묶는다. 그 `composer.json`은 PIE에게 pre-packaged binary를 내려받게 한다.
   workflow `assets.yml`은 binding의 recipe로 각 플랫폼의 asset을 빌드한다. Go module의 정적 라이브러리, abi3 wheel,
-  PHP 8.4와 8.5용 PHP 확장, npm 플랫폼 package, 그리고 WASM module을 가진 npm package 자체다. Go module `packages/go`는
+  `config/toolchain.json`의 `phpExtension.minors`의 각 PHP minor(8.4와 8.5, `make test-scripts`가 `assets.yml`의
+  step을 그 목록과 비교한다)용 PHP 확장, npm 플랫폼 package, 그리고 WASM module을 가진 npm package 자체다. Go module `packages/go`는
   `goModules`에 없다. `make release-go-module`이 tag의 tree에 생성 파일과 정적 라이브러리를 더한 commit을 만들고, 그것을
   consumer로 증명하고, 그 commit에 `packages/go/vX.Y.Z`를 tag한다(binding GN-19f). 둘 다 없는 tag의 Go module은
   consumer가 빌드할 수 없기 때문이다.
