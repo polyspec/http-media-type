@@ -11,6 +11,7 @@
     }
   },
   "devDependencies": {
+    "@polyspec/binding": "https://github.com/polyspec/binding/releases/download/v0.0.2/polyspec-binding-0.0.2.tgz",
     "@polyspec/kit": "https://github.com/polyspec/kit/releases/download/v0.0.109/polyspec-kit-0.0.109.tgz",
     "typescript": "7.0.2"
   }

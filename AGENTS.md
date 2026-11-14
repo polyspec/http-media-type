@@ -50,18 +50,17 @@ rules of this repository.
   (binding BD-27) `packages/python`, `packages/ts`, `packages/ts/wasm`, `packages/php-ext` and
   `packages/go/internal/ffi` (with `packages/go/go.mod`), which `binding scaffold` writes and `make bindings-check`
   compares; their `generated/` is not tracked. `Cargo.lock` at the root pins every dependency.
-- `polyspec-binding-core` is a Git dependency of the core and of the binding crates (branch `v1/rust-core` of the
-  binding repository) until binding is released; `Cargo.lock` pins its commit. The core implements
-  `binding_core::Kinds` for its error (MT-8).
-- binding itself is the TypeScript tool of the same repository, which no registry holds yet. `scripts/binding.mts` takes
-  it from the checkout that Cargo made of the commit that `Cargo.lock` pins, and `make install-binding` clones it into
-  `var/binding/<commit>` and installs its dependencies there by its `package-lock.json`, so that the generator and
-  `binding_core` are one version. Only `make install-binding` downloads (the crates of `Cargo.lock` and the packages of
-  binding); `make bindings-check` and `make bindings` read them offline and fail while they are missing, because a
-  check that downloads depends on the network.
-  The clone is a Git checkout of binding at that commit: binding check reads its own commit from it and compares it with
-  the commit of `Cargo.lock` (CK-20), which a copy of the files alone fails. This holds only until the first release of
-  binding.
+- `polyspec-binding-core` is a Git dependency of the core and of the binding crates on the tag `v0.0.2` of the binding
+  repository, its release; `Cargo.lock` pins the commit of that tag. The core implements `binding_core::Kinds` for its
+  error (MT-8).
+- binding itself is the npm package `@polyspec/binding` of the same release, which `package.json` names by the URL of
+  its release asset and `package-lock.json` pins by its integrity, so that the generator and `binding_core` are one
+  version (G-6); binding check takes the tag of `Cargo.lock` as its own (CK-20). The recipes run
+  `node_modules/@polyspec/binding/dist/cli.js` with the node of `var/tools/bin`. The bootstrap and `make
+  install-packages` install it, and `make install-binding` fetches the crates of `Cargo.lock` (`cargo fetch
+  --locked`), which binding reads with `cargo metadata --locked --offline`; `make bindings-check` and `make bindings`
+  download nothing and fail while they are missing, because a check that downloads depends on the network.
+  `tests/scripts/binding.test.mts` requires the tag, the asset, its integrity and these recipes.
 - A case of `contracts/media-type.json` follows the case convention of binding (G-5): its keys are the parameter names
   in snake_case (`media_type`), and a record is the object of its fields (a parameter is `{"name", "value"}`).
 - `make bindings` generates; every make target that builds or tests a binding runs it first. `make test-bindings` runs
@@ -131,7 +130,7 @@ rules of this repository.
   wheels.
 - A release is the commit of a successful push or manual run of `ci.yml` on `main`. The version-bump commit
   `chore(release): Release X.Y.Z` sets the version of the core (`version` of `[workspace.package]` of the root
-  `Cargo.toml`), writes the binding manifests again with binding scaffold (`node scripts/binding.mts scaffold --contract
+  `Cargo.toml`), writes the binding manifests again with binding scaffold (`node node_modules/@polyspec/binding/dist/cli.js scaffold --contract
   packages/rust/interface.json`), updates the versions of the local packages in `Cargo.lock` and renames `## Unreleased`
   of both changelogs to `## X.Y.Z`, with a new empty `## Unreleased` above it. When the CI run of that push succeeds,
   `.github/workflows/release.yml` starts by itself, and `gh workflow run release.yml -f run=<id>` starts it again: `make

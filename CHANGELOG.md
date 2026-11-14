@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- binding is a released dependency. `polyspec-binding-core` of the core and of the binding crates names the tag
+  `v0.0.2` of the binding repository in place of the branch `v1/rust-core`, binding scaffold of 0.0.2 wrote the binding
+  crates again, and `Cargo.lock` pins the commit of the tag. The tool is the npm package `@polyspec/binding` of the same
+  release, which `package.json` names by the URL of its release asset and `package-lock.json` pins by its integrity;
+  the recipes run its `dist/cli.js`, and `make install-binding` runs `cargo fetch --locked`, because binding reads the
+  crates with `cargo metadata --locked --offline`. `scripts/binding.mts`, which cloned binding at the commit of
+  `Cargo.lock` into `var/binding`, is removed. The new test `tests/scripts/binding.test.mts` failed its four tests on
+  the branch dependency and passes with the release. `make bindings` generates the five targets, and `make
+  bindings-check` and `binding check --release` give no finding.
+
 - `AGENTS.md` states that no tracked file names a Git commit, and `make test-scripts` checks it
   (`tests/scripts/commits.test.mts`); the lock files, the workflows, the digests of `config/toolchain.json` and the
   contract cases are left out by name, because they pin by a commit or hold other hexadecimal data. Before, the rule

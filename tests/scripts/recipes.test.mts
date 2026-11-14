@@ -1,6 +1,6 @@
 // The recipes of the binding targets (AGENTS.md, "Bindings"): they run the node and the npm of var/tools by their paths
-// and download nothing, because only the install targets download (make install-binding installs binding at the commit
-// of Cargo.lock and fetches its crates). The test reads a dry run of the recipes (make --dry-run), so no recipe runs.
+// and download nothing, because only the install targets download (make install-packages installs binding from its
+// release asset and make install-binding fetches the crates of Cargo.lock; tests/scripts/binding.test.mts). The test reads a dry run of the recipes (make --dry-run), so no recipe runs.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
@@ -26,9 +26,4 @@ test('the binding recipes run the tools of var/tools and download nothing', () =
   assert.deepEqual(bare, [], 'a recipe runs the node or the npm of the PATH');
   const downloads = lines.filter((line) => / ci( |$)|pip install(?!.* --no-index)|npm install(?!.* --offline)/.test(line));
   assert.deepEqual(downloads, [], 'a recipe downloads');
-});
-
-test('make install installs binding at the commit of Cargo.lock', () => {
-  const lines = dryRun('install-binding');
-  assert.ok(lines.some((line) => line.endsWith('scripts/binding.mts install')), `make install-binding does not install binding:\n${lines.join('\n')}`);
 });

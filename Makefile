@@ -26,7 +26,9 @@ CARGO := cargo
 # Extra arguments of every cargo build, for example --ignore-rust-version on a machine without the pinned release.
 CARGOFLAGS ?=
 CORE := polyspec-http-media-type
-BINDING := $(NODE) scripts/binding.mts
+# The tool of the release of binding that Cargo.lock pins, which package.json names and npm installs (make
+# install-packages); the generator and binding_core are one version (G-6).
+BINDING := $(NODE) $(CURDIR)/node_modules/@polyspec/binding/dist/cli.js
 CASES := $(CURDIR)/contracts/media-type.json
 VAR := $(CURDIR)/var
 export CARGO_TARGET_DIR ?= $(CURDIR)/target
@@ -84,10 +86,10 @@ endif
 install-packages:
 	$(ONLINE) $(NPM) ci
 
-# install-binding fetches the crates of Cargo.lock and installs binding at the commit that Cargo.lock pins into
-# var/binding (scripts/binding.mts); bindings-check and bindings read it offline and fail while it is missing.
+# install-binding fetches the crates of Cargo.lock, which binding reads with cargo metadata --locked --offline;
+# bindings-check and bindings fail while they are missing.
 install-binding:
-	$(ONLINE) $(NODE) scripts/binding.mts install
+	$(ONLINE) $(CARGO) fetch --locked
 
 # toolchain-lock writes mise.lock with the mise of var/tools for the platforms of the deployment targets.
 TOOLCHAIN_LOCK_PLATFORMS := linux-x64,linux-arm64,macos-arm64
