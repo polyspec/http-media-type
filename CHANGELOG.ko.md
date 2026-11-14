@@ -1,7 +1,9 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c7883477c0cb444595c67e6db941d1fefb496bdad16b69bdb6eb343062ee6f7f -->
+<!-- source-sha256: db7e9f21f87215e4d7e98c6db03e842bcd83c6260eb173d110bb639787dd66d7 -->
 
 ## Unreleased
+
+## 0.0.1
 
 - binding은 release된 의존이다. 코어와 바인딩 crate의 `polyspec-binding-core`가 브랜치 `v1/rust-core` 대신 binding
   저장소의 tag `v0.0.2`를 적고, 0.0.2의 binding scaffold가 바인딩 crate를 다시 썼으며, `Cargo.lock`이 그 tag의 커밋을

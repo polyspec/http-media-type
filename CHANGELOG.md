@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.0.1
+
 - binding is a released dependency. `polyspec-binding-core` of the core and of the binding crates names the tag
   `v0.0.2` of the binding repository in place of the branch `v1/rust-core`, binding scaffold of 0.0.2 wrote the binding
   crates again, and `Cargo.lock` pins the commit of the tag. The tool is the npm package `@polyspec/binding` of the same
