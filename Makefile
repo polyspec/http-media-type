@@ -26,7 +26,7 @@ CARGO := cargo
 # Extra arguments of every cargo build, for example --ignore-rust-version on a machine without the pinned release.
 CARGOFLAGS ?=
 CORE := polyspec-http-media-type
-BINDING := node scripts/binding.mts
+BINDING := $(NODE) scripts/binding.mts
 CASES := $(CURDIR)/contracts/media-type.json
 VAR := $(CURDIR)/var
 export CARGO_TARGET_DIR ?= $(CURDIR)/target
@@ -37,7 +37,8 @@ PYTHON ?= python3.14
 PHP ?= $(KIT_TOOLS)/bin/php
 PHP_CONFIG ?= $(KIT_TOOLS)/bin/php-config
 PHPUNIT ?= vendor/bin/phpunit
-MATURIN := maturin==1.16.0
+# The maturin of mise.toml, which make install-tools installs at the digest of mise.lock.
+MATURIN ?= $(KIT_TOOLS)/mise/shims/maturin
 # The Go of the go directive of packages/go/go.mod and the wasm-bindgen CLI of the release of the wasm-bindgen crate of
 # packages/ts/wasm/Cargo.toml (binding GN-15, GN-18), both of mise.toml, which make install-tools installs into
 # var/tools/mise; test-go and node-package compare both releases before they use them.
@@ -50,7 +51,7 @@ export PHP PHP_CONFIG
 # "Platforms").
 CDYLIB := $(if $(filter Darwin,$(shell uname -s)),dylib,so)
 
-.PHONY: bootstrap install install-tools install-packages toolchain-lock check test lint lint-rust fmt-check bindings-check bindings test-bindings lint-bindings test-python test-node test-php \
+.PHONY: bootstrap install install-tools install-packages toolchain-lock install-binding check test lint lint-rust fmt-check bindings-check bindings test-bindings lint-bindings test-python test-node test-php \
 	test-wasm test-go node-package check-declarations install-php-tools test-scripts ci-targets ci-summary ci-passed release-tag release-checkout \
 	release-prepare release-tools release-tools-path release-assets release-publish release-undraft release-coverage
 
@@ -69,6 +70,7 @@ install:
 	$(MAKE) --no-print-directory install-tools TOOLS=npm
 	$(MAKE) --no-print-directory install-packages
 	$(MAKE) --no-print-directory install-tools
+	$(MAKE) --no-print-directory install-binding
 
 # TOOLS=npm runs the bootstrap of kit, which imports only Node.js built-ins, with the Node.js of the machine; any other TOOLS
 # names tools of kit, such as go or rust, and no TOOLS installs every declared tool.
@@ -81,6 +83,11 @@ endif
 
 install-packages:
 	$(ONLINE) $(NPM) ci
+
+# install-binding fetches the crates of Cargo.lock and installs binding at the commit that Cargo.lock pins into
+# var/binding (scripts/binding.mts); bindings-check and bindings read it offline and fail while it is missing.
+install-binding:
+	$(ONLINE) $(NODE) scripts/binding.mts install
 
 # toolchain-lock writes mise.lock with the mise of var/tools for the platforms of the deployment targets.
 TOOLCHAIN_LOCK_PLATFORMS := linux-x64,linux-arm64,macos-arm64
@@ -118,21 +125,18 @@ test-bindings: lint-bindings check-declarations test-python test-node test-wasm 
 lint-bindings: bindings
 	$(CARGO) clippy $(CARGOFLAGS) --workspace --locked --all-targets --features panic-test -- -D warnings
 
-# The TypeScript compiler of package-lock.json checks the generated declarations of the Node binding.
-node_modules/.package-lock.json: package-lock.json
-	npm ci --no-audit --no-fund
-
-check-declarations: bindings node_modules/.package-lock.json
+# The TypeScript compiler of package-lock.json, which make install-packages installs, checks the generated declarations
+# of the Node binding.
+check-declarations: bindings
 	node_modules/.bin/tsc --noEmit --strict packages/ts/generated/index.d.ts
 	node_modules/.bin/tsc --noEmit --strict packages/ts/wasm/generated/index.d.ts
 
-# The wheel, installed into a virtual environment; the generated tests (G-5) and the contract cases (MT-1 to MT-8).
+# The wheel that the maturin of mise.toml builds, installed into a virtual environment without an index; the generated tests (G-5) and the contract cases (MT-1 to MT-8).
 test-python: bindings
 	$(PYTHON) -m venv --clear $(VAR)/venv
-	$(VAR)/venv/bin/pip install -q $(MATURIN)
 	rm -rf $(VAR)/wheels
-	cd packages/python && $(VAR)/venv/bin/maturin build --locked --features panic-test --out $(VAR)/wheels $(CARGOFLAGS)
-	$(VAR)/venv/bin/pip install -q --force-reinstall $(VAR)/wheels/*.whl
+	cd packages/python && $(MATURIN) build --locked --interpreter $(VAR)/venv/bin/python --features panic-test --out $(VAR)/wheels $(CARGOFLAGS)
+	$(VAR)/venv/bin/pip install -q --no-index --force-reinstall $(VAR)/wheels/*.whl
 	cd $(VAR) && venv/bin/python -m unittest discover -s $(CURDIR)/packages/python/generated/tests -t $(CURDIR)/packages/python/generated/tests
 	cd $(VAR) && HTTP_MEDIA_TYPE_CASES=$(CASES) venv/bin/python -m unittest discover -s $(CURDIR)/packages/python/tests -t $(CURDIR)/packages/python/tests
 
@@ -141,7 +145,7 @@ test-python: bindings
 # (binding GN-3c); the recipe packs it as a release does and installs both tarballs, without the other platforms'
 # packages. The package also holds the WASM module and its glue, which wasm-bindgen writes into
 # packages/ts/wasm/generated before the package is packed (binding GN-18, P-5).
-PLATFORM := $(shell node -p 'process.platform + "-" + process.arch + (process.platform === "linux" ? "-gnu" : "")')
+PLATFORM := $(shell $(NODE) -p 'process.platform + "-" + process.arch + (process.platform === "linux" ? "-gnu" : "")')
 NODE_ADDON := http-media-type.$(PLATFORM).node
 WASM_BINDGEN_RELEASE := $(shell sed -n 's/^wasm-bindgen = "=\(.*\)"$$/\1/p' packages/ts/wasm/Cargo.toml)
 node-package: bindings
@@ -152,16 +156,16 @@ node-package: bindings
 	$(CARGO) build $(CARGOFLAGS) -p $(CORE)-node --locked --features panic-test
 	rm -rf $(VAR)/node $(VAR)/node-platform && mkdir -p $(VAR)/node $(VAR)/node-platform
 	cp $(CARGO_TARGET_DIR)/debug/libpolyspec_http_media_type_node.$(CDYLIB) $(VAR)/node-platform/$(NODE_ADDON)
-	node -e 'const p = require("./packages/ts/package.json"); require("fs").writeFileSync("$(VAR)/node-platform/package.json", JSON.stringify({ name: p.name + "-$(PLATFORM)", version: p.version, os: [process.platform], cpu: [process.arch], main: "$(NODE_ADDON)", files: ["$(NODE_ADDON)"] }, null, 2) + "\n")'
-	cd $(VAR)/node-platform && npm pack --pack-destination $(VAR)/node
-	cd packages/ts && npm pack --pack-destination $(VAR)/node
+	$(NODE) -e 'const p = require("./packages/ts/package.json"); require("fs").writeFileSync("$(VAR)/node-platform/package.json", JSON.stringify({ name: p.name + "-$(PLATFORM)", version: p.version, os: [process.platform], cpu: [process.arch], main: "$(NODE_ADDON)", files: ["$(NODE_ADDON)"] }, null, 2) + "\n")'
+	cd $(VAR)/node-platform && $(NPM) pack --pack-destination $(VAR)/node
+	cd packages/ts && $(NPM) pack --pack-destination $(VAR)/node
 	echo '{ "private": true }' > $(VAR)/node/package.json
-	cd $(VAR)/node && npm install --no-audit --no-fund --omit=optional ./*.tgz
+	cd $(VAR)/node && $(NPM) install --offline --no-audit --no-fund --omit=optional ./*.tgz
 
 # The generated tests and the contract cases of the Node binding on node --test, against the installed package.
 test-node: node-package
 	cp packages/ts/generated/tests/generated.test.mjs packages/ts/tests/cases.test.mjs $(VAR)/node/
-	cd $(VAR)/node && HTTP_MEDIA_TYPE_CASES=$(CASES) node --test generated.test.mjs cases.test.mjs
+	cd $(VAR)/node && HTTP_MEDIA_TYPE_CASES=$(CASES) $(NODE) --test generated.test.mjs cases.test.mjs
 
 # The extension built against PHP_CONFIG and loaded into PHP; the stub is linted, then the generated tests and the
 # contract cases run on PHPUnit.
@@ -176,7 +180,7 @@ test-php: bindings
 test-wasm: node-package
 	cp packages/ts/wasm/generated/tests/generated.test.mjs $(VAR)/node/generated.wasm.test.mjs
 	cp packages/ts/tests/cases.wasm.test.mjs $(VAR)/node/
-	cd $(VAR)/node && HTTP_MEDIA_TYPE_CASES=$(CASES) node --expose-gc --test generated.wasm.test.mjs cases.wasm.test.mjs
+	cd $(VAR)/node && HTTP_MEDIA_TYPE_CASES=$(CASES) $(NODE) --expose-gc --test generated.wasm.test.mjs cases.wasm.test.mjs
 
 # The static library with the test features (binding GN-13b), which Go links through CGO_LDFLAGS; gofmt and go vet,
 # then the generated tests and the contract cases of packages/go/tests on go test. GOTOOLCHAIN=local: a go of another

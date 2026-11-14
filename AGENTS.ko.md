@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: a47352baa262502356ee6be61d514251bc2a3db764a2918a5e753327b800d050 -->
+<!-- source-sha256: caa00a59a3e20315aac0f32c49c86af4e7edde6837b552e1da271fd14f326017 -->
 # 개발
 
 모든 polyspec 저장소의 작업 원칙은 polyspec의 `PRINCIPLES.md`에 있다. 이 파일은 이 저장소의 규칙만
@@ -47,8 +47,11 @@
   `v1/rust-core` 브랜치). `Cargo.lock`이 그 커밋을 고정한다. 코어는 자기 오류에
   `binding_core::Kinds`를 구현한다(MT-8).
 - binding 자체는 같은 저장소의 TypeScript 도구이며, 아직 어떤 registry에도 없다. `scripts/binding.mts`는
-  `Cargo.lock`이 고정한 커밋으로 Cargo가 만든 checkout에서 binding을 가져와 `var/binding/<commit>`에 clone하고,
-  거기에 binding의 `package-lock.json`대로 의존성을 설치한다. 그래서 생성기와 `binding_core`가 한 판이 된다.
+  `Cargo.lock`이 고정한 커밋으로 Cargo가 만든 checkout에서 binding을 가져와 `make install-binding`이 그것을
+  `var/binding/<commit>`에 clone하고 거기에 binding의 `package-lock.json`대로 의존성을 설치한다. 그래서 생성기와
+  `binding_core`가 한 판이 된다. 내려받는 것은 `make install-binding`뿐이다(`Cargo.lock`의 crate와 binding의 package).
+  `make bindings-check`와 `make bindings`는 그것을 offline으로 읽고 없으면 실패한다. 내려받는 검사는 network에 기대기
+  때문이다.
   그 clone은 그 커밋의 binding Git checkout이다. binding check는 그 clone에서 자기 커밋을 읽어
   `Cargo.lock`의 커밋과 비교하며(CK-20), 파일만 복사한 것은 이 비교에서 실패한다. 이 방식은 binding의 첫 릴리스까지만
   유지된다.
@@ -76,7 +79,7 @@
   라이브러리에만 그렇게 지시하고(binding GN-3d), 추적되는 어떤 파일도 `RUSTFLAGS`나 `.cargo/config.toml`로 링크 설정을
   주지 않는다. recipe는 Cargo가 만든 라이브러리를 플랫폼의 확장자(macOS `dylib`, Linux `so`)로 가리킨다.
 - 도구는 추적되는 파일에 고정되고, binding처럼 checkout의 `var/tools`에 설치된다. `mise.toml`은 Node.js, npm, Go,
-  Python, Composer, wasm-bindgen CLI를 binding의 판으로 적고 `mise.lock`은 그 digest를 적는다. `config/toolchain.json`은
+  Python, Composer, wasm-bindgen CLI, maturin을 binding의 판으로 적고 `mise.lock`은 그 digest를 적는다. `config/toolchain.json`은
   mise의 판과 digest를, `rust-toolchain.toml`은 target `wasm32-unknown-unknown`을 가진 Rust toolchain을, `.php-version`은
   `var/tools/bin`의 wrapper가 실행하는 기계의 PHP를 적는다. 새 checkout은 `make bootstrap`을 실행해 `package.json`의
   `devEngines`가 적는 npm으로 `package-lock.json`을 설치하고, 그다음 `@polyspec/kit`의 설치기를 실행하는 `make install`

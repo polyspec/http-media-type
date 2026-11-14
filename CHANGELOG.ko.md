@@ -1,7 +1,18 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9e3a47f6bda732e8d0196bd354c148b574302e12fc82f0eb13c58650ee058f05 -->
+<!-- source-sha256: 40fbf44c7c7f0a85c2f3a7cd34d6ead91e8ac65e909d35d4a5babe60522dfcd2 -->
 
 ## Unreleased
+
+- recipe는 `var/tools/bin`의 node와 npm을 그 경로로 실행하고, 내려받는 것은 설치 target뿐이다. `make install-binding`은
+  `Cargo.lock`의 커밋으로 binding을 설치하고 `Cargo.lock`의 crate를 받으며, CI는 모든 job에서 그것을 실행한다.
+  `scripts/binding.mts`는 그것을 offline으로 읽고 없으면 실패한다. `mise.toml`과 `mise.lock`은 maturin 1.16.0을
+  binding의 digest로 고정하고, `make test-python`은 pip이 PyPI에서 설치한 maturin 대신 그것을 실행하며, wheel은 index
+  없이 설치된다. `make check-declarations`는 TypeScript를 `make install-packages`에서 받고 더 이상 `npm ci`를 실행하지
+  않으며, `make node-package`는 tarball을 offline으로 설치한다. 이전에는 `scripts/binding.mts`와 recipe 세 개가 검사
+  중에 내려받았고, `bindings-check`, `npm pack`, `node --test`는 기계의 `PATH`가 가리키는 node와 npm을 실행했다. 새
+  시험 `tests/scripts/recipes.test.mts`는 바인딩 recipe와 `make install-binding`의 dry run을 읽는다. `make check`와 CI
+  항목 `core`의 target인 `make test-scripts`가 그것을 실행하며, 변경 전에는 0 passed, 2 failed였고 변경 후에는 2
+  passed, 0 failed다.
 
 - `Cargo.lock`은 `polyspec-binding-core`를 binding의 branch `v1/rust-core`의 head에 pin하고, 바인딩 package는 그
   binding의 scaffold가 쓰는 것과 같다. 그래서 `make bindings-check`는 finding을 보고하지 않는다. 전에는 lock(CK-20)과

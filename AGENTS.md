@@ -47,8 +47,11 @@ rules of this repository.
   binding repository) until binding is released; `Cargo.lock` pins its commit. The core implements
   `binding_core::Kinds` for its error (MT-8).
 - binding itself is the TypeScript tool of the same repository, which no registry holds yet. `scripts/binding.mts` takes
-  it from the checkout that Cargo made of the commit that `Cargo.lock` pins, clones it into `var/binding/<commit>` and
-  installs its dependencies there by its `package-lock.json`, so that the generator and `binding_core` are one version.
+  it from the checkout that Cargo made of the commit that `Cargo.lock` pins, and `make install-binding` clones it into
+  `var/binding/<commit>` and installs its dependencies there by its `package-lock.json`, so that the generator and
+  `binding_core` are one version. Only `make install-binding` downloads (the crates of `Cargo.lock` and the packages of
+  binding); `make bindings-check` and `make bindings` read them offline and fail while they are missing, because a
+  check that downloads depends on the network.
   The clone is a Git checkout of binding at that commit: binding check reads its own commit from it and compares it with
   the commit of `Cargo.lock` (CK-20), which a copy of the files alone fails. This holds only until the first release of
   binding.
@@ -78,7 +81,7 @@ rules of this repository.
   `.cargo/config.toml`. The recipes name the library that Cargo builds by the extension of the platform (`dylib` on
   macOS, `so` on Linux).
 - The tools are pinned in tracked files and installed into `var/tools` of the checkout, as in binding: `mise.toml`
-  names Node.js, npm, Go, Python, Composer and the wasm-bindgen CLI at the releases of binding and `mise.lock` their
+  names Node.js, npm, Go, Python, Composer, the wasm-bindgen CLI and maturin at the releases of binding and `mise.lock` their
   digests, `config/toolchain.json` the release of mise and its digests, `rust-toolchain.toml` the Rust toolchain with
   the target `wasm32-unknown-unknown` and `.php-version` the PHP of the machine, which the wrappers of `var/tools/bin`
   run. A fresh checkout runs `make bootstrap`, which installs `package-lock.json` with the npm of `devEngines` of
