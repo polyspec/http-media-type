@@ -30,7 +30,7 @@ jobs:
       matrix:
         include:
           - name: core
-            targets: lint-rust fmt-check test bindings-check release-coverage
+            targets: lint-rust fmt-check test bindings-check test-scripts release-coverage
           - name: bindings
             php: true
             targets: lint-bindings check-declarations test-python test-node test-wasm test-php test-go
