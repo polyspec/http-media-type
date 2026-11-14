@@ -1,7 +1,16 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 94077ef46cc2d266fa01df2424771fba4ea434b7fe4cae733e3782e0e9982b7c -->
+<!-- source-sha256: ba931ce2c6e3062031d5523da77d78a5df5f4b938c80df9fd04f25cad9699efd -->
 
 ## Unreleased
+
+- binding 의존은 0.0.3 대신 release 0.0.4다. `package.json`이 그 release asset을 적고, `package-lock.json`이 그 integrity를
+  고정하며, 모든 Cargo manifest의 `polyspec-binding-core`가 tag `v0.0.4`를 적고, 0.0.4의 binding scaffold가 바인딩
+  crate를 다시 썼고, `Cargo.lock`이 그 tag의 commit을 고정한다. binding 0.0.3이 쓰는 `packages/release.mk`의 recipe
+  `release-npm`은 `npm pack --dry-run --json`의 목록을 배열로 읽었는데, `devEngines`의 npm 12.2.0은 package 이름을 key로
+  하는 object를 쓴다. 그래서 job `assets / npm`이 `release-npm`에서 `TypeError: Cannot read properties of undefined
+  (reading 'files')`로 실패했을 것이다. binding 0.0.4는 그 object를 읽는다(binding B2.266). 검증: `binding check
+  --release`는 finding이 없고, `make bindings-check`, `make docs-check`, `make test-scripts`, `make release-coverage`가
+  통과한다.
 
 ## 0.0.2
 

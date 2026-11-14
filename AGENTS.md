@@ -50,7 +50,7 @@ rules of this repository.
   (binding BD-27) `packages/python`, `packages/ts`, `packages/ts/wasm`, `packages/php-ext` and
   `packages/go/internal/ffi` (with `packages/go/go.mod`), which `binding scaffold` writes and `make bindings-check`
   compares; their `generated/` is not tracked. `Cargo.lock` at the root pins every dependency.
-- `polyspec-binding-core` is a Git dependency of the core and of the binding crates on the tag `v0.0.3` of the binding
+- `polyspec-binding-core` is a Git dependency of the core and of the binding crates on the tag `v0.0.4` of the binding
   repository, its release; `Cargo.lock` pins the commit of that tag. The core implements `binding_core::Kinds` for its
   error (MT-8).
 - binding itself is the npm package `@polyspec/binding` of the same release, which `package.json` names by the URL of

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- binding is the release 0.0.4 in place of 0.0.3: `package.json` names its release asset, `package-lock.json` pins its
+  integrity, `polyspec-binding-core` of every Cargo manifest names the tag `v0.0.4`, binding scaffold of 0.0.4 wrote
+  the binding crates again, and `Cargo.lock` pins the commit of the tag. The recipe `release-npm` of `packages/release.mk`
+  that binding 0.0.3 writes read the list of `npm pack --dry-run --json` as an array, and the npm 12.2.0 of `devEngines`
+  writes an object keyed by the name of the package, so the job `assets / npm` would fail at `release-npm` with
+  `TypeError: Cannot read properties of undefined (reading 'files')`; binding 0.0.4 reads that object (binding B2.266).
+  Verified: `binding check --release` gives no finding, and `make bindings-check`, `make docs-check`, `make
+  test-scripts` and `make release-coverage` pass.
+
 ## 0.0.2
 
 - The release holds the packages of the bindings per platform as assets of its GitHub Release. binding 0.0.3 writes
