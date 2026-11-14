@@ -1,5 +1,5 @@
 <!-- doc-id: readme -->
-<!-- source-sha256: 9ded15e0c942cb51995015263cb91f14d824a3b0d64469b682410c1c6a131941 -->
+<!-- source-sha256: fb153d899f591b255fc5216b4b804ffebf1b3b1d6204db8ae2ba4c4aebac08a1 -->
 # http-media-type
 
 [English](README.md)
@@ -25,7 +25,7 @@ HTTP의 media type(RFC 9110 8.3.1절)과 그것을 쓰는 문법인 token, quote
 `polyspec.http_media_type`, Python 3.14 이상), npm 패키지 `@polyspec/http-media-type`(브라우저는 조건 `browser`와 subpath `./wasm`의 WASM entry를
 받는다), Go 모듈 `github.com/polyspec/http-media-type/packages/go`. 각각 `parse`, `format`,
 `sameValue`/`same_value`, record `MediaType`과 `Parameter`, `kind`와 `status`를 가진 오류 클래스
-`HttpMediaType<Category>Error`를 가진다. 0.0.2부터 각 tag `vX.Y.Z`의 GitHub Release가 `linux-x64-gnu`,
+`HttpMediaType<Category>Error`를 가진다. 0.0.3부터 각 tag `vX.Y.Z`의 GitHub Release가 `linux-x64-gnu`,
 `linux-arm64-gnu`, `darwin-arm64`용 바인딩 package를 가지고, Go module은 tag `packages/go/vX.Y.Z`를 가진다. 어느
 package registry에도 올리지 않는다.
 

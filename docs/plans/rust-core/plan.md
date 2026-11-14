@@ -16,7 +16,7 @@ checklist](checklist.md) holds what that release still needs, in the order in wh
 1. The checks of the documents and of the tracked files (T1.1, T1.2).
 2. The dependency on binding by its released tag in place of its branch (T1.3), which waits for the release of binding
    0.0.2.
-3. The packages of the bindings per platform in the release 0.0.2 (T1.4): binding generates their release recipes, so
+3. The packages of the bindings per platform in the release 0.0.3 (T1.4, T1.7): binding generates their release recipes, so
    this repository writes none of its own, and the workflow `assets.yml` builds them on the runner of each platform.
 4. The first release (T1.5): every job of `ci.yml` passes on `main`, and the tags of the core and of the Go module are
    set.
