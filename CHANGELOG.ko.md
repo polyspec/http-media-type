@@ -1,7 +1,9 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 18fc5cf6229493a1a959bde76fa3632edf84587ef322bac6ef3dbfffd8dffbe0 -->
+<!-- source-sha256: b24f4f9ff60f7518f6842deb101995adb07f6cf785dc7c49587bdc5e7a8d5e2d -->
 
 ## Unreleased
+
+## 0.0.3
 
 - release가 PHP 확장을 빌드하는 PHP minor는 `config/toolchain.json`의 `phpExtension.minors`(8.4와 8.5)이고,
   `tests/scripts/workflows.test.mts`는 `assets.yml`의 job `platform`에 각 minor마다 PHP setup 하나와 그 뒤의 `make

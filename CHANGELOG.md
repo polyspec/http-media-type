@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.0.3
+
 - The PHP minors for which a release builds the PHP extension are `phpExtension.minors` of `config/toolchain.json`
   (8.4 and 8.5), and `tests/scripts/workflows.test.mts` requires one setup of each minor followed by one `make
   release-php-ext PHP=php` in the job `platform` of `assets.yml`, in the order of the list and for no other minor.
