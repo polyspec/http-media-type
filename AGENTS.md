@@ -102,13 +102,19 @@ rules of this repository.
 ## Checks
 
 - `make test` runs the contract cases, the citation checks, the random tests and the runtime properties of the core.
-- `make lint` runs `cargo fmt --check` and clippy of the core with every warning denied; `make check` runs both and
-  `make bindings-check`.
+- `make lint` runs `cargo fmt --check` and clippy of the core with every warning denied; `make check` runs both,
+  `make bindings-check`, `make docs-check` and `make test-scripts`.
+- `make docs-check` reads each document that `config/documents.json` selects, with its links, anchors and fences and
+  the `doc-id` and `source-sha256` of each Korean twin, and the checklist `docs/plans/rust-core/checklist.md`, whose
+  rows `config/checklist.json` declares. The plan of the repository is `docs/plans/rust-core/plan.md`; a task is a row
+  of that checklist, marked `[o]` only after its verification command passed on the committed tree. Run it before a
+  commit. Every tracked document is an English file `X.md` and its Korean twin `X.ko.md`, and `make documents-stamp
+  PATHS=<twin>` writes the `source-sha256` of a twin after its translation is reviewed; no marker is written by hand.
 
 ## CI and release
 
 - `.github/workflows/ci.yml` runs on the push of `main` and on a manual run, one job per matrix entry: `core` runs
-  `lint-rust`, `fmt-check`, `test`, `bindings-check` and `release-coverage`, and `bindings` runs the targets of `make
+  `lint-rust`, `fmt-check`, `test`, `bindings-check`, `docs-check`, `test-scripts` and `release-coverage`, and `bindings` runs the targets of `make
   test-bindings`. Each job runs them with `make ci-targets`, which runs every target to its end and writes the report
   `var/ci/<name>/`, and the last job `ci-passed` passes only when every other job passed. The jobs run on
   `ubuntu-26.04-arm`, pin every action by its commit, set no `timeout-minutes` and run every command of a step as one
@@ -134,9 +140,12 @@ rules of this repository.
 - Open before the first release, which is not complete without them: `origin` has no `main`, so the release pushes
   `v1/rust-core` as `main` and makes `main` the default branch; and the packages of the bindings (the abi3 wheel, the
   PHP extension, the npm package with its platform packages) are rows of `config/release.json` only when kit 0.0.111
-  and a release of binding exist, because kit 0.0.109 refuses their kinds. The branch `lane/release-wasm` holds those rows, the napi CLI of the npm platform packages and `make release-wasm`; it is
-  work that waits for the same two releases and is merged then, because with kit 0.0.109 and the pinned binding its
-  `make bindings-check` and `make release-coverage` fail.
+  and a release of binding exist, because kit 0.0.109 refuses their kinds. binding generates the release recipes of
+  these packages (binding B2.262), so this repository writes no recipe of its own. The branch `lane/release-wasm` holds
+  those rows, the napi CLI of the npm platform packages and its own `make release-wasm`; when the two releases and that
+  binding row exist, its rows and the napi CLI are taken without its recipe and the branch is removed (T1.4 of
+  `docs/plans/rust-core/checklist.md`), because with kit 0.0.109 and the pinned binding its `make bindings-check` and
+  `make release-coverage` fail.
 
 ## Commits and changes
 

@@ -51,7 +51,7 @@ export PHP PHP_CONFIG
 # "Platforms").
 CDYLIB := $(if $(filter Darwin,$(shell uname -s)),dylib,so)
 
-.PHONY: bootstrap install install-tools install-packages toolchain-lock install-binding check test lint lint-rust fmt-check bindings-check bindings test-bindings lint-bindings test-python test-node test-php \
+.PHONY: bootstrap install install-tools install-packages toolchain-lock install-binding check test lint lint-rust fmt-check bindings-check docs-check documents-stamp bindings test-bindings lint-bindings test-python test-node test-php \
 	test-wasm test-go node-package check-declarations install-php-tools test-scripts ci-targets ci-summary ci-passed release-tag release-checkout \
 	release-prepare release-tools release-tools-path release-assets release-publish release-undraft release-coverage
 
@@ -95,7 +95,7 @@ toolchain-lock:
 	$(ONLINE) $(KIT_TOOLS)/bin/mise lock --global --platform $(TOOLCHAIN_LOCK_PLATFORMS)
 
 # The core and the contract; none of them needs the generator (binding design L-2).
-check: lint-rust fmt-check test bindings-check test-scripts
+check: lint-rust fmt-check test bindings-check docs-check test-scripts
 
 # The tests of the tracked files, on node --test.
 test-scripts:
@@ -111,6 +111,15 @@ lint-rust:
 
 fmt-check:
 	$(CARGO) fmt --all --check
+
+# The documents of config/documents.json, each on its own (links, anchors, fences and the doc-id and source-sha256 of each
+# Korean twin), and the checklists of docs/plans, whose rows config/checklist.json declares.
+docs-check:
+	$(NODE) $(KIT)/check-documents.mjs --checklist-place --private-path /Users/ --private-path /home/ --kit-rows
+
+# Writes the source-sha256 of each Korean twin of PATHS from its English file, after the translation is reviewed.
+documents-stamp:
+	$(NODE) $(KIT)/documents-stamp.mjs $(PATHS)
 
 # The contract check and the comparison of the tracked binding packages with what binding writes (L-2 (c)).
 bindings-check:

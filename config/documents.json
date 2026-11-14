@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "comment": "The Markdown documents of the repository, which make docs-check reads.",
+  "include": [
+    "**/*.md"
+  ],
+  "changelogs": [
+    "CHANGELOG.md"
+  ],
+  "changelogRules": [
+    "unreleased-first",
+    "unreleased-once",
+    "versions-only",
+    "newest-first",
+    "unreleased-empty-at-release"
+  ]
+}

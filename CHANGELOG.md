@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- The repository has the plan `docs/plans/rust-core/plan.md` and its checklist `docs/plans/rust-core/checklist.md`, each
+  with its Korean twin, in the form of the other polyspec repositories; the checklist holds what the first release
+  still needs. `make docs-check` reads the documents of `config/documents.json` and the checklist with the rows of
+  `config/checklist.json`, and `make check` and the entry `core` of CI run it; `make documents-stamp` writes the
+  `source-sha256` of a reviewed Korean twin. Before, no check read the documents, so a Korean twin could fall behind its
+  English file unseen. `AGENTS.md` states that binding generates the release recipes of the platform packages, so the
+  rows of the branch `lane/release-wasm` are taken without its `make release-wasm`.
+
 - `[profile.release]` sets `lto = false`; before, it set `lto = true`, with which a Go program that links the Go
   static library beside the static library of another polyspec repository, as the Go module of http-negotiation links it, fails with duplicate symbols such as
   `rust_eh_personality` (binding GN-15i, CK-91). Cargo sets `lto` for a whole profile, so the PHP extension, the Node

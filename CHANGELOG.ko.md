@@ -1,7 +1,14 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 7f59b64088322ce9fa0eebaea3e174b30781fe762807cc74e031ffc87dd66bc8 -->
+<!-- source-sha256: 2e04461f9b834b440de25042bf24a2cda17a435d33096d2735d4f01db07b0b2b -->
 
 ## Unreleased
+
+- 저장소는 다른 polyspec 저장소의 형태로 plan `docs/plans/rust-core/plan.md`와 그 checklist
+  `docs/plans/rust-core/checklist.md`를 각각 한국어 쌍과 함께 가진다. checklist는 첫 release에 아직 필요한 것을 담는다.
+  `make docs-check`가 `config/documents.json`의 문서와 `config/checklist.json`의 행을 가진 checklist를 읽고, `make
+  check`와 CI의 항목 `core`가 그것을 실행한다. `make documents-stamp`는 검토된 한국어 쌍의 `source-sha256`을 쓴다. 전에는
+  어떤 검사도 문서를 읽지 않아서 한국어 쌍이 영어 파일보다 뒤처져도 보이지 않았다. `AGENTS.md`는 binding이 플랫폼
+  package의 release recipe를 생성한다고 적으므로, 브랜치 `lane/release-wasm`의 행은 그 `make release-wasm` 없이 가져온다.
 
 - `[profile.release]`는 `lto = false`를 정한다. 이전에는 `lto = true`였고, 그러면 Go 정적 라이브러리를
   다른 polyspec 저장소의 정적 라이브러리(http-negotiation의 Go module이 그렇게 링크한다)와 함께 링크하는 Go program이 `rust_eh_personality` 같은 중복 symbol로

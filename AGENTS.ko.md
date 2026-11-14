@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 0b02ae4d580ac8f7e21d137cc1d0335ceefa6015c84f11b679eaf709fd711d9d -->
+<!-- source-sha256: 738ae03f87751ab058d06588037e75c7a5901771eff735c0ad672158c50f30b2 -->
 # 개발
 
 모든 polyspec 저장소의 작업 원칙은 polyspec의 `PRINCIPLES.md`에 있다. 이 파일은 이 저장소의 규칙만
@@ -99,13 +99,19 @@
 ## 검사
 
 - `make test`는 코어의 contract case, 인용 검사, 무작위 시험, 런타임 속성을 실행한다.
-- `make lint`는 `cargo fmt --check`와, 모든 경고를 거부하는 코어의 clippy를 실행한다. `make check`는 그 둘과
-  `make bindings-check`를 실행한다.
+- `make lint`는 `cargo fmt --check`와, 모든 경고를 거부하는 코어의 clippy를 실행한다. `make check`는 그 둘,
+  `make bindings-check`, `make docs-check`, `make test-scripts`를 실행한다.
+- `make docs-check`는 `config/documents.json`이 고르는 각 문서를 그 link, anchor, fence, 각 한국어 쌍의 `doc-id`와
+  `source-sha256`과 함께 읽고, `config/checklist.json`이 행을 선언하는 checklist `docs/plans/rust-core/checklist.md`를
+  읽는다. 저장소의 plan은 `docs/plans/rust-core/plan.md`이다. 작업은 그 checklist의 행이고, 그 검증 명령이 commit된
+  tree에서 통과한 뒤에만 `[o]`로 표시된다. commit 전에 실행한다. 추적되는 모든 문서는 영어 파일 `X.md`와 그 한국어 쌍
+  `X.ko.md`이고, 번역을 검토한 뒤 `make documents-stamp PATHS=<twin>`이 그 쌍의 `source-sha256`을 쓴다. 표시를 손으로
+  쓰지 않는다.
 
 ## CI와 release
 
 - `.github/workflows/ci.yml`은 `main`의 push와 수동 실행에서 돈다. matrix 항목마다 job 하나다. `core`는 `lint-rust`,
-  `fmt-check`, `test`, `bindings-check`, `release-coverage`를 실행하고, `bindings`는 `make test-bindings`의 대상을 실행한다.
+  `fmt-check`, `test`, `bindings-check`, `docs-check`, `test-scripts`, `release-coverage`를 실행하고, `bindings`는 `make test-bindings`의 대상을 실행한다.
   각 job은 그 대상을 `make ci-targets`로 실행한다. `make ci-targets`는 모든 대상을 끝까지 실행하고 보고서
   `var/ci/<name>/`을 쓴다. 마지막 job `ci-passed`는 다른 모든 job이 통과했을 때만 통과한다. job은 `ubuntu-26.04-arm`에서
   돌고, 모든 action을 commit으로 고정하며, `timeout-minutes`를 두지 않고, step의 모든 명령을 make target 하나로
@@ -129,8 +135,10 @@
 - 첫 release 전에 열려 있는 일이며, 이것 없이는 release가 끝난 것이 아니다. `origin`에 `main`이 없으므로 release는
   `v1/rust-core`를 `main`으로 push하고 `main`을 기본 브랜치로 만든다. 바인딩의 package(abi3 wheel, PHP 확장, npm package와
   그 플랫폼 package)는 kit 0.0.111과 binding의 release가 있어야 `config/release.json`의 행이 된다. kit 0.0.109가 그 kind를
-  거부하기 때문이다. 브랜치 `lane/release-wasm`이 그 행, npm 플랫폼 package의 napi CLI, `make release-wasm`을 가진다. 이 브랜치는
-  같은 두 release를 기다리는 일이며 그때 merge한다. kit 0.0.109와 고정된 binding으로는 그 `make bindings-check`와
+  거부하기 때문이다. binding이 이 package의 release recipe를 생성하므로(binding B2.262) 이 저장소는 자기
+  recipe를 쓰지 않는다. 브랜치 `lane/release-wasm`이 그 행, npm 플랫폼 package의 napi CLI, 자기 `make release-wasm`을
+  가진다. 두 release와 그 binding 행이 있으면 그 recipe 없이 그 행과 napi CLI를 가져오고 브랜치를 지운다
+  (`docs/plans/rust-core/checklist.md`의 T1.4). kit 0.0.109와 고정된 binding으로는 그 `make bindings-check`와
   `make release-coverage`가 실패하기 때문이다.
 
 ## Commit과 변경
