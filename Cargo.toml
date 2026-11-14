@@ -29,6 +29,11 @@ let_underscore_untyped = "deny"
 map_err_ignore = "deny"
 as_conversions = "deny"
 
+# The release profile builds every package of a release, the Go static library among them, and Cargo sets lto for a
+# whole profile and not for one package. LTO would put the standard library and binding_core into the one object of the
+# Go static library, and a Go program that links it beside the static library of another polyspec repository would
+# fail with duplicate symbols such as rust_eh_personality (binding GN-15i, CK-91). So no package takes LTO, and
+# codegen-units = 1 keeps the optimization across the units of each crate.
 [profile.release]
-lto = true
+lto = false
 codegen-units = 1

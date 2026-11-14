@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- `[profile.release]` sets `lto = false`; before, it set `lto = true`, with which a Go program that links the Go
+  static library beside the static library of another polyspec repository, as the Go module of http-negotiation links it, fails with duplicate symbols such as
+  `rust_eh_personality` (binding GN-15i, CK-91). Cargo sets `lto` for a whole profile, so the PHP extension, the Node
+  addon and the wheel of a release are built without LTO too. `Cargo.lock` pins `polyspec-binding-core` at the head
+  of the branch `v1/rust-core` of binding, whose scaffold writes the binding packages as they are. The new test
+  `tests/scripts/profile.test.mts` reads the profile of `Cargo.toml` and `.cargo/config.toml`: before the change
+  `make test-scripts` failed one test, with it every test passed. Verified: `make -k bindings-check test-scripts lint-bindings check-declarations test-python test-node test-wasm test-php test-go` passed.
+
 - The recipes run the node and the npm of `var/tools/bin` by their paths, and only the install targets download. `make
   install-binding` installs binding at the commit of `Cargo.lock` and fetches the crates of `Cargo.lock`, and CI runs it
   in every job; `scripts/binding.mts` reads them offline and fails while they are missing. `mise.toml` and `mise.lock`

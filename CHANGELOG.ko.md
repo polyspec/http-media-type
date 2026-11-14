@@ -1,7 +1,15 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 40fbf44c7c7f0a85c2f3a7cd34d6ead91e8ac65e909d35d4a5babe60522dfcd2 -->
+<!-- source-sha256: d1377a32272a09109b5316ab207cdcb783bc7608dcecd5c50f4daa3c79738835 -->
 
 ## Unreleased
+
+- `[profile.release]`는 `lto = false`를 정한다. 이전에는 `lto = true`였고, 그러면 Go 정적 라이브러리를
+  다른 polyspec 저장소의 정적 라이브러리(http-negotiation의 Go module이 그렇게 링크한다)와 함께 링크하는 Go program이 `rust_eh_personality` 같은 중복 symbol로
+  실패한다(binding GN-15i, CK-91). Cargo는 `lto`를 profile 전체에 정하므로 release의 PHP 확장, Node addon, wheel도
+  LTO 없이 빌드된다. `Cargo.lock`은 `polyspec-binding-core`를 binding의 branch `v1/rust-core`의 head로 고정하며, 그
+  scaffold는 바인딩 package를 지금 그대로 쓴다. 새 시험 `tests/scripts/profile.test.mts`는 `Cargo.toml`과
+  `.cargo/config.toml`의 profile을 읽는다. 변경 전에는 `make test-scripts`의 시험 하나가 실패했고 변경 후에는 모두
+  통과한다. 검증: `make -k bindings-check test-scripts lint-bindings check-declarations test-python test-node test-wasm test-php test-go`가 통과했다.
 
 - recipe는 `var/tools/bin`의 node와 npm을 그 경로로 실행하고, 내려받는 것은 설치 target뿐이다. `make install-binding`은
   `Cargo.lock`의 커밋으로 binding을 설치하고 `Cargo.lock`의 crate를 받으며, CI는 모든 job에서 그것을 실행한다.

@@ -32,6 +32,13 @@ rules of this repository.
 ## Rust
 
 - `rust-toolchain.toml` pins the toolchain and `Cargo.lock` the dependencies.
+- `[profile.release]` of `Cargo.toml` sets `lto = false` and `codegen-units = 1` (binding GN-15i, CK-91). The Go
+  static library is built with the release profile, and LTO would put the standard library and `binding_core` into
+  its one object, so a Go program that links it beside the static library of another polyspec repository, as the Go module of http-negotiation links it, would fail with
+  duplicate symbols such as `rust_eh_personality`. Cargo sets `lto` for a whole profile and not for one package, and
+  binding builds the Go static library with `[profile.release]`, so the profile itself keeps LTO off, and the PHP
+  extension, the Node addon and the wheel of a release are built without it too; `codegen-units = 1` keeps the
+  optimization across the units of each crate. `tests/scripts/profile.test.mts` requires the profile.
 - The workspace lints deny every warning, unsafe code, `unwrap`, `expect`, `as` conversions and discarded results;
   `clippy.toml` disallows the methods that turn a failure or an absence into a value (`Option::unwrap_or` and its
   family, `Result::ok`, `map_or`, `map_or_else`). A use that a rule needs carries `#[allow(..., reason = "<rule id>")]`.

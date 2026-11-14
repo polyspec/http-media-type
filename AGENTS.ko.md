@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: caa00a59a3e20315aac0f32c49c86af4e7edde6837b552e1da271fd14f326017 -->
+<!-- source-sha256: 0b02ae4d580ac8f7e21d137cc1d0335ceefa6015c84f11b679eaf709fd711d9d -->
 # 개발
 
 모든 polyspec 저장소의 작업 원칙은 polyspec의 `PRINCIPLES.md`에 있다. 이 파일은 이 저장소의 규칙만
@@ -33,6 +33,13 @@
 ## Rust
 
 - `rust-toolchain.toml`이 toolchain을 고정하고 `Cargo.lock`이 의존성을 고정한다.
+- `Cargo.toml`의 `[profile.release]`는 `lto = false`와 `codegen-units = 1`을 정한다(binding GN-15i, CK-91). Go 정적
+  라이브러리는 release profile로 빌드되고, LTO는 표준 라이브러리와 `binding_core`를 그 하나의 object에 넣으므로,
+  Go program이 그것을 다른 polyspec 저장소의 정적 라이브러리(http-negotiation의 Go module이 그렇게 링크한다)와 함께 링크하면 `rust_eh_personality` 같은 중복 symbol로
+  실패한다. Cargo는 `lto`를 package 하나가 아니라 profile 전체에 정하고, binding은 Go 정적 라이브러리를
+  `[profile.release]`로 빌드하므로, profile 자체가 LTO를 끄고 release의 PHP 확장, Node addon, wheel도 LTO 없이
+  빌드된다. `codegen-units = 1`은 각 crate의 unit 사이의 최적화를 유지한다. `tests/scripts/profile.test.mts`가 이
+  profile을 요구한다.
 - workspace lint는 모든 경고, unsafe 코드, `unwrap`, `expect`, `as` 변환, 버려지는 결과를 거부한다.
   `clippy.toml`은 실패나 부재를 값으로 바꾸는 method(`Option::unwrap_or`와 그 계열,
   `Result::ok`, `map_or`, `map_or_else`)를 금지한다. 규칙이 필요로 하는 사용에는 `#[allow(..., reason = "<rule id>")]`를 붙인다.
