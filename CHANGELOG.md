@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.0.2
+
 - The release holds the packages of the bindings per platform as assets of its GitHub Release. binding 0.0.3 writes
   the release recipes of the contract (binding GN-19h): `make release-recipes` runs `binding release-recipes --root .`,
   which writes the ignored file `packages/release.mk`, and the Makefile includes it after it defines `BINDING_RUN`,
