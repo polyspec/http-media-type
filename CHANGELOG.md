@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.0.2
+
 - binding is the release 0.0.4 in place of 0.0.3: `package.json` names its release asset, `package-lock.json` pins its
   integrity, `polyspec-binding-core` of every Cargo manifest names the tag `v0.0.4`, binding scaffold of 0.0.4 wrote
   the binding crates again, and `Cargo.lock` pins the commit of the tag. The recipe `release-npm` of `packages/release.mk`
@@ -10,8 +12,6 @@
   `TypeError: Cannot read properties of undefined (reading 'files')`; binding 0.0.4 reads that object (binding B2.266).
   Verified: `binding check --release` gives no finding, and `make bindings-check`, `make docs-check`, `make
   test-scripts` and `make release-coverage` pass.
-
-## 0.0.2
 
 - The release holds the packages of the bindings per platform as assets of its GitHub Release. binding 0.0.3 writes
   the release recipes of the contract (binding GN-19h): `make release-recipes` runs `binding release-recipes --root .`,

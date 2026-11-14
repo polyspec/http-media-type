@@ -1,7 +1,9 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ba931ce2c6e3062031d5523da77d78a5df5f4b938c80df9fd04f25cad9699efd -->
+<!-- source-sha256: fde3ecf6a172465e00a54bac4c2e3afbbb9b5f454426347fea0013d62ce53b9c -->
 
 ## Unreleased
+
+## 0.0.2
 
 - binding 의존은 0.0.3 대신 release 0.0.4다. `package.json`이 그 release asset을 적고, `package-lock.json`이 그 integrity를
   고정하며, 모든 Cargo manifest의 `polyspec-binding-core`가 tag `v0.0.4`를 적고, 0.0.4의 binding scaffold가 바인딩
@@ -11,8 +13,6 @@
   (reading 'files')`로 실패했을 것이다. binding 0.0.4는 그 object를 읽는다(binding B2.266). 검증: `binding check
   --release`는 finding이 없고, `make bindings-check`, `make docs-check`, `make test-scripts`, `make release-coverage`가
   통과한다.
-
-## 0.0.2
 
 - release가 플랫폼별 바인딩 package를 GitHub Release의 asset으로 가진다. binding 0.0.3이 contract의 release recipe를
   쓴다(binding GN-19h). `make release-recipes`가 `binding release-recipes --root .`을 실행해 ignore된 파일
