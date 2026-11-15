@@ -270,7 +270,11 @@ ci-platform:
 # setup-php for its matrix entry before the recipe runs. The job provisions the LLVM of config/toolchain.json before this
 # recipe (binding GN-19i): the ubuntu-26.04 images hold it at /usr/lib/llvm-<major>, the default LLVM_ROOT of
 # packages/release.mk, and on macOS install-llvm-action installs it and sets LLVM_PATH, which the build takes as LLVM_ROOT (defined
-# before the include of packages/release.mk).
+# before the include of packages/release.mk). install-llvm-action appends DYLD_LIBRARY_PATH and LD_LIBRARY_PATH with
+# /usr/lib first to GITHUB_ENV, and the PHP of Homebrew then loads the libsqlite3 of the system and aborts, so the recipe
+# and its sub-makes run with both empty and the build reads LLVM through LLVM_ROOT alone.
+ci-php: DYLD_LIBRARY_PATH :=
+ci-php: LD_LIBRARY_PATH :=
 ci-php:
 	@test -n "$(EXPECTED_PHP_MINOR)" || { echo 'ci-php: EXPECTED_PHP_MINOR is required, for example make ci-php EXPECTED_PHP_MINOR=8.4' >&2; exit 2; }
 	$(MAKE) --no-print-directory install-tools TOOLS=rust

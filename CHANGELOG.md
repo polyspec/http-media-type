@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- binding 0.0.9 and kit 0.0.114 (T1.10): `polyspec-binding-core` of every Cargo manifest names `tag = "v0.0.9"`,
+  `Cargo.lock` pins the commit of that tag with no other `polyspec-binding-core`, and `package.json` names the release
+  assets of `@polyspec/binding` 0.0.9 and `@polyspec/kit` 0.0.114, whose integrity `package-lock.json` pins. A
+  repository that depends on this core and on binding 0.0.9 then pins one `polyspec-binding-core` (CK-20). `make
+  ci-php` runs with `DYLD_LIBRARY_PATH` and `LD_LIBRARY_PATH` empty, because install-llvm-action puts `/usr/lib` first
+  in both on macOS and the PHP of Homebrew then loads the libsqlite3 of the system and aborts; the workflow test reads
+  the recipe of `ci-php` past its lines of target-specific variables.
+
 - binding 0.0.8 (T1.8-1): `polyspec-binding-core` of every Cargo manifest names `tag = "v0.0.8"`, `Cargo.lock` pins
   the commit of that tag with no other `polyspec-binding-core`, and `package.json` names the release asset of
   `@polyspec/binding` 0.0.8, whose integrity `package-lock.json` pins. binding 0.0.8 writes no recipe `install-llvm`,

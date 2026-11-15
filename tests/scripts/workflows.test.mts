@@ -214,7 +214,8 @@ function entriesOf(job: string): Record<string, string>[] {
 /** The recipe of `target` in the text of a Makefile: its lines, each with its continuation lines joined. */
 function recipeOf(makefile: string, target: string): string[] {
   const lines = makefile.split('\n');
-  const start = lines.findIndex((line) => new RegExp(`^${target.replaceAll('.', '\\.')} *:(?!=)`).test(line));
+  // A line that assigns a target-specific variable, such as ci-php: LD_LIBRARY_PATH :=, is no rule of the recipe.
+  const start = lines.findIndex((line) => new RegExp(`^${target.replaceAll('.', '\\.')} *:(?!=)(?!.*=)`).test(line));
   if (start < 0) return [];
   const recipe: string[] = [];
   for (let at = start + 1; at < lines.length && (lines[at] as string).startsWith('\t'); at += 1) {
