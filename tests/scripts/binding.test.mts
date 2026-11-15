@@ -11,7 +11,7 @@ import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 
 const root = resolve(import.meta.dirname, '../..');
-const VERSION = '0.0.5';
+const VERSION = '0.0.8';
 const ASSET = `https://github.com/polyspec/binding/releases/download/v${VERSION}/polyspec-binding-${VERSION}.tgz`;
 const read = (file: string): string => readFileSync(join(root, file), 'utf8');
 const dryRun = (...goals: string[]): string[] =>

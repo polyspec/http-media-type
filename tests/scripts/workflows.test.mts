@@ -38,7 +38,7 @@ const RELEASE = '.github/workflows/release.yml';
 // The runner of each platform of the release (binding GN-19a).
 const PLATFORM_RUNNERS: Record<string, string> = { 'linux-x64-gnu': 'ubuntu-26.04', 'linux-arm64-gnu': 'ubuntu-26.04-arm', 'darwin-arm64': 'macos-15' };
 // The targets of packages/release.mk for a contract with the targets go, python, php, node and wasm (binding GN-19h).
-const RECIPE_TARGETS = ['release-go-static', 'release-wheel', 'release-php-ext', 'release-npm-platform', 'release-npm', 'release-go-module', 'release-binding-check', 'release-platform-assets', 'install-llvm', 'install-wasm-bindgen'];
+const RECIPE_TARGETS = ['release-go-static', 'release-wheel', 'release-php-ext', 'release-npm-platform', 'release-npm', 'release-go-module', 'release-binding-check', 'release-platform-assets', 'install-wasm-bindgen'];
 const EXPRESSION = String.raw`\$\{\{[^}]*\}\}`;
 const VALUE = String.raw`(?:(?:[A-Za-z0-9_./-]|${EXPRESSION})+|"(?:[A-Za-z0-9_. -]|${EXPRESSION})+"|'${EXPRESSION}')`;
 const RUN = new RegExp(String.raw`^make ([a-z][a-z0-9-]*)((?: (?:[A-Z][A-Z0-9_]*=${VALUE}|${EXPRESSION}))*)$`);
@@ -188,7 +188,7 @@ test('assets.yml builds each platform on its runner and the job npm, and ci and 
   for (const [platform, runner] of Object.entries(PLATFORM_RUNNERS))
     assert.match(text, new RegExp(`- platform: ${platform}\\n +runner: ${runner.replaceAll('.', '\\.')}\\n`), `${platform} on ${runner}`);
   const runs = jobNames(text).flatMap((name) => runsOf(jobOf(text, name), read('Makefile')));
-  for (const target of ['release-recipes', 'release-binding-check', 'release-go-static', 'release-wheel', 'install-llvm', 'release-php-ext', 'release-npm-platform', 'install-wasm-bindgen', 'release-npm'])
+  for (const target of ['release-recipes', 'release-binding-check', 'release-go-static', 'release-wheel', 'release-php-ext', 'release-npm-platform', 'install-wasm-bindgen', 'release-npm'])
     assert.ok(runs.some((run) => run === `make ${target}` || run.startsWith(`make ${target} `)), target);
   for (const file of [CI, RELEASE]) assert.match(read(file), /^ {4}uses: \.\/\.github\/workflows\/assets\.yml$/m, file);
   assert.match(read(CI), /needs: \[[^\]]*\bassets\b[^\]]*\]/);

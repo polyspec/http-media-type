@@ -267,14 +267,16 @@ ci-platform:
 	$(MAKE) --no-print-directory -k release-go-static release-wheel release-npm-platform
 
 # ci-php builds the extension for the PHP minor EXPECTED_PHP_MINOR with the php of PATH, which the job selects with
-# setup-php for its matrix entry before the recipe runs.
+# setup-php for its matrix entry before the recipe runs. The job provisions the LLVM of config/toolchain.json before this
+# recipe (binding GN-19i): the ubuntu-26.04 images hold it at /usr/lib/llvm-<major>, the default LLVM_ROOT of
+# packages/release.mk, and on macOS install-llvm-action installs it and sets LLVM_PATH, which the build takes as LLVM_ROOT (defined
+# before the include of packages/release.mk).
 ci-php:
 	@test -n "$(EXPECTED_PHP_MINOR)" || { echo 'ci-php: EXPECTED_PHP_MINOR is required, for example make ci-php EXPECTED_PHP_MINOR=8.4' >&2; exit 2; }
 	$(MAKE) --no-print-directory install-tools TOOLS=rust
 	$(MAKE) --no-print-directory install-binding
 	$(MAKE) --no-print-directory release-recipes
 	$(if $(filter true,$(RELEASE)),$(MAKE) --no-print-directory release-binding-check)
-	$(MAKE) --no-print-directory install-llvm
 	$(MAKE) --no-print-directory release-php-ext PHP=php EXPECTED_PHP_MINOR=$(EXPECTED_PHP_MINOR)
 
 ci-npm:
@@ -327,6 +329,11 @@ ci-release:
 BINDING_RUN := $(BINDING)
 BINDING_DEP :=
 UV := $(KIT_TOOLS)/mise/shims/uv
+# LLVM_PATH, which install-llvm-action sets on macOS, is the LLVM_ROOT of the recipes of packages/release.mk; without it
+# the file takes its default (binding GN-19i).
+ifdef LLVM_PATH
+LLVM_ROOT ?= $(LLVM_PATH)
+endif
 .PHONY: release-recipes
 release-recipes:
 	$(BINDING_RUN) release-recipes --root .

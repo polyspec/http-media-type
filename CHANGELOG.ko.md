@@ -1,7 +1,14 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ad2815e88d897ea7ae185e8bec9fb857d327f54f3f7b763078a0eb76d1671af1 -->
+<!-- source-sha256: c2a0390b9dd2644a125892626960f88c702a45ccf82866c2b9d296d565f91a8b -->
 
 ## Unreleased
+
+- binding 0.0.8(T1.8-1). 모든 Cargo manifest의 `polyspec-binding-core`가 `tag = "v0.0.8"`을 적고, `Cargo.lock`은 다른
+  `polyspec-binding-core` 없이 그 tag의 commit을 고정하며, `package.json`은 `@polyspec/binding` 0.0.8의 release asset을
+  적고 `package-lock.json`이 그 integrity를 고정한다. binding 0.0.8은 recipe `install-llvm`을 쓰지 않으므로
+  `make ci-php`는 LLVM을 설치하지 않는다. ubuntu-26.04 image는 `config/toolchain.json`의 LLVM을
+  `/usr/lib/llvm-<major>`에 두고, macOS에서는 `assets.yml`의 job `php`가 install-llvm-action으로 설치하며 recipe는 그
+  `LLVM_PATH`를 `LLVM_ROOT`로 넘긴다(binding GN-19i).
 
 ## 0.0.4
 
