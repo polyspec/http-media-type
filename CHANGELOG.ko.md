@@ -1,7 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9f1a9c47c646c7f3c327218bcf01330db9b76eaf6e74006e9d1d756428a23908 -->
+<!-- source-sha256: ad2815e88d897ea7ae185e8bec9fb857d327f54f3f7b763078a0eb76d1671af1 -->
 
 ## Unreleased
+
+## 0.0.4
+
+- 공유 도구는 @polyspec/kit 0.0.113입니다 (`package.json`, `package-lock.json`).
 
 - `release.yml`의 job도 각각 recipe 하나다(T1.9). `make ci-tag`와 `make ci-release`는 token, CI 실행의 id, actor,
   tag를 job의 `env:`에서 읽는다. `ci-tag`는 release-tag에 `GITHUB_ENV`용 자기 파일을 주고 같은 step에서 그 파일의 TAG와

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.0.4
+
+- The shared tools are @polyspec/kit 0.0.113 (`package.json`, `package-lock.json`).
+
 - The jobs of `release.yml` are one recipe each too (T1.9): `make ci-tag` and `make ci-release`, which read the
   token, the id of the CI run, the actor and the tag from the `env:` of the job. `ci-tag` gives release-tag a file of its
   own for `GITHUB_ENV` and reads TAG and VERSION from it in the same step. The job `release` downloads the assets of
