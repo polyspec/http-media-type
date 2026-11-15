@@ -1,10 +1,10 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9328bcabdd9fd1ff5f3916dd489163449b3c6ebb3efd0501a93cebd264d612a2 -->
+<!-- source-sha256: 5bfa23d18ccd16b7c5889cf05dd8dfcd9711bf8a1962efb17c0598706acb8424 -->
 
 ## Unreleased
 
-- 과거 binding 0.0.2 고정 task T1.3을 철회한다. 공개된 release 0.0.2는 binding 0.0.4를 고정하고(T1.4-1),
-  공개된 release 0.0.3은 binding 0.0.5를 고정한다(T1.7-1). 이전 고정을 복원할 작업은 필요하지 않다. 이는 후속
+- 과거 binding 0.0.2 고정 task T1.3을 철회한다. 후속 고정은 release된 binding 0.0.4(T1.4-1)와
+  binding 0.0.5(T1.7-1)를 선택한다. 0.0.2 asset release를 완료했다고 주장하지 않는다. 이전 고정을 복원할 작업은 필요하지 않다. 이는 후속
   고정으로 대체되었음을 기록하며 이전 고정의 검증을 새로 실행했다고 주장하지 않는다. T1.4는 철회 상태를 유지하고
   계획한 0.0.4의 graph/native 및 최종 CI task는 대기 상태를 유지한다.
 

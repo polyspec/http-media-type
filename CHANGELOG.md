@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- The historical binding 0.0.2 pin task T1.3 is withdrawn: the published 0.0.2 release pins binding 0.0.4
-  (T1.4-1), and the published 0.0.3 release pins binding 0.0.5 (T1.7-1). No work to restore the older pin is needed.
+- The historical binding 0.0.2 pin task T1.3 is withdrawn: the later pins select released binding 0.0.4
+  (T1.4-1) and binding 0.0.5 (T1.7-1). The 0.0.2 asset release is not claimed complete. No work to restore the older pin is needed.
   This records supersession, without claiming a newly run verification of that old pin. T1.4 stays withdrawn and
   the planned 0.0.4 graph/native and final CI tasks remain waiting.
 
