@@ -1,7 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e5a483b72b621b9a9c0534961e26698d658e074be151599693c2bc6e3e85fe3a -->
+<!-- source-sha256: caf0fd06222de74a7bd84313630922b141e0c77b3097b5a3f42baa370747b94c -->
 
 ## Unreleased
+
+- 과거 0.0.3 검증: T1.7-3은 완료다. [release tag의 CI 실행](https://github.com/polyspec/http-media-type/actions/runs/43637603260)과
+  그 [core job](https://github.com/polyspec/http-media-type/actions/runs/43637603260/job/132577751340)이 `docs-check`와
+  `release-coverage`를 모두 통과했고 target 일곱 개가 모두 끝났다. 로그의 tree는 변경하지 않은 `v0.0.3` tree와
+  일치한다. 정확한 tree와 실행 식별자는 무시된 `var/report/release-state-v0.0.3/audit.json`에 보존한다. 이는 과거
+  version 검증을 완료한 기록이며, 계획한 0.0.4의 native 또는 전체 CI 검증이 아니다.
 
 - PHP 확장 asset은 platform/minor별 독립 job을 가지며 각 job에 native setup 하나, expected-minor build 인자,
   서로 다른 artifact가 있다. PHP 이외의 platform asset은 한 번씩 빌드한다. workflow owner는 조합 누락·중복,

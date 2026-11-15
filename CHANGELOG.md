@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Historical 0.0.3 verification: T1.7-3 is complete. The [release-tag CI run](https://github.com/polyspec/http-media-type/actions/runs/43637603260)
+  and its [core job](https://github.com/polyspec/http-media-type/actions/runs/43637603260/job/132577751340) passed both
+  `docs-check` and `release-coverage`, with all seven targets complete. The logged tree matches the immutable
+  `v0.0.3` tree; the exact tree and run identifiers are retained in ignored
+  `var/report/release-state-v0.0.3/audit.json`. This closes historical version verification, not native or complete
+  CI verification of the planned 0.0.4.
+
 - PHP extension assets have independent platform/minor jobs, each with one native setup, an expected-minor build
   argument and a distinct artifact. Non-PHP platform assets build once. The workflow owner passes five tests,
   including mutations of missing and duplicate combinations, runners, setup/build ownership and artifact identity.
