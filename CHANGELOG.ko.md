@@ -1,7 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e2e04976dcaf35fcd3fcccf20cdb97c069cdb8c0d3e590c6b1d35bfe5e5fbcdd -->
+<!-- source-sha256: 098de4ae79690e3a0ea359af5c2e9bcf2dba286fdfaaa95a1a6521ec288ea40e -->
 
 ## Unreleased
+
+- T1.8-2는 PHP platform/minor별 독립 job을 정의하고 그 소유 관계를 검사한다. Red: 현재 workflow에는 `php` job이
+  없고 `platform` 안에서 두 minor를 빌드한다. native asset 검증은 binding의 expected-minor recipe 공개와 그 실행을
+  기다린다.
 
 - 다음 release plan은 서로 일치하는 binding 0.0.7 generator와 core 의존성, PHP minor별로 독립 선택하는 asset job을
   요구한다. 현재 release tree는 binding 0.0.5를 쓴다. 계획한 버전은 0.0.4이며 의존성 갱신, 생성된 target 검증,

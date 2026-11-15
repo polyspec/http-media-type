@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: dc998603163ebd4a833aa1e40c288a850f20d3868fef894dd6f2c839bc3b9408 -->
+<!-- source-sha256: 7d3d0d1dd0703a5dbd6d5535a7cd03229280b4aac6a4471c6be61aace3b48a49 -->
 # 개발
 
 모든 polyspec 저장소의 작업 원칙은 polyspec의 `PRINCIPLES.md`에 있다. 이 파일은 이 저장소의 규칙만
@@ -108,6 +108,14 @@
 
 ## CI와 release
 
+- T1.8-2의 계획: `assets.yml`은 PHP 이외의 build를 platform마다 한 번씩 `platform`에 두고 `php`에 platform과
+  `phpExtension.minors`의 모든 조합을 둔다. 각 PHP 항목은 `matrix.php`의 setup 하나,
+  `make release-php-ext PHP=php EXPECTED_PHP_MINOR=${{ matrix.php }}` 하나, 서로 다른 artifact
+  `assets-php-${{ matrix.platform }}-${{ matrix.php }}`를 가진다. 두 job은 각각 자기 platform의 runner를 쓴다.
+  release는 `assets-*` artifact를 병합한다. 이 소유 관계는 한 minor가 다른 minor의 결과를 대체하지 못하게 하고
+  local run이 실제 runtime 하나를 선택하게 한다. workflow test는 선언된 구조를 증명한다. native 검증은 expected-minor
+  검사(B2.275)를 가진 binding recipe의 공개, 재생성, 실제 실행을 기다린다. 건너뛴 setup action은 runtime 선택을
+  증명하지 않는다.
 - `.github/workflows/ci.yml`은 `main`의 push와 수동 실행에서 돈다. matrix 항목마다 job 하나다. `core`는 `lint-rust`,
   `fmt-check`, `test`, `bindings-check`, `docs-check`, `test-scripts`, `release-coverage`를 실행하고, `bindings`는 `make test-bindings`의 대상을 실행한다.
   각 job은 그 대상을 `make ci-targets`로 실행한다. `make ci-targets`는 모든 대상을 끝까지 실행하고 보고서

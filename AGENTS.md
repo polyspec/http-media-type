@@ -112,6 +112,14 @@ rules of this repository.
 
 ## CI and release
 
+- Planned in T1.8-2: `assets.yml` keeps the non-PHP builds in `platform` once per platform and gives `php` the complete
+  platform by `phpExtension.minors` matrix. Each PHP entry has one setup of `matrix.php`, one
+  `make release-php-ext PHP=php EXPECTED_PHP_MINOR=${{ matrix.php }}` and the distinct artifact
+  `assets-php-${{ matrix.platform }}-${{ matrix.php }}`. Both jobs use the runner of their platform. The release merges
+  `assets-*` artifacts. This ownership prevents one minor from replacing another and lets a local run select one
+  real runtime. Workflow tests establish the declared structure; native proof waits for the published binding
+  recipe with its expected-minor check (B2.275), regeneration and actual execution. A skipped setup action proves no
+  runtime selection.
 - `.github/workflows/ci.yml` runs on the push of `main` and on a manual run, one job per matrix entry: `core` runs
   `lint-rust`, `fmt-check`, `test`, `bindings-check`, `docs-check`, `test-scripts` and `release-coverage`, and `bindings` runs the targets of `make
   test-bindings`. Each job runs them with `make ci-targets`, which runs every target to its end and writes the report

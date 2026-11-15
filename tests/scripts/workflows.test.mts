@@ -1,7 +1,7 @@
 // The rules of the GitHub workflows (AGENTS.md, "CI and release"), checked on the tracked files of .github and on the
 // Makefile:
 //
-//   - every job runs on ubuntu-26.04-arm, except the job platform of assets.yml, which runs on the runner of each platform
+//   - every job runs on ubuntu-26.04-arm, except the jobs platform and php of assets.yml, which run on the runner of each platform
 //     of the release, ubuntu-26.04, ubuntu-26.04-arm or macos-15, because the asset of a platform is built and loaded only
 //     on that platform: no tool of the release compiles for another platform (binding GN-19a);
 //   - every action is a local action of .github/actions or a workflow of .github/workflows, or is pinned by its full
@@ -10,9 +10,8 @@
 //   - every run step is one make target that the Makefile defines, or that the release recipes define that it includes
 //     (packages/release.mk, which binding release-recipes writes and which is not tracked, binding GN-19h), with
 //     arguments NAME=value or expressions alone;
-//   - the job platform of assets.yml builds the PHP extension for each minor of phpExtension.minors of
-//     config/toolchain.json, in its order: one setup of that PHP followed by one `make release-php-ext PHP=php`, and for
-//     no other minor, so that the list of the minors that a release supports has one source;
+//   - platform builds each non-PHP asset once; php selects each platform and supported minor independently, with one
+//     setup, one expected-minor build and an artifact whose name includes both selections (T1.8-2, binding GN-19i);
 //   - the workflows ci and release call assets.yml (binding GN-19i), and the release job of release.yml downloads the
 //     assets of each platform and runs release-go-module and release-platform-assets after release-publish has created
 //     the draft release, and release-undraft last.
@@ -97,20 +96,101 @@ test('assets.yml builds each platform on its runner and the job npm, and ci and 
   assert.match(read(CI), /needs: \[[^\]]*\bassets\b[^\]]*\]/);
 });
 
-test('assets.yml builds the PHP extension for each minor of phpExtension.minors of config/toolchain.json', () => {
-  const minors = (JSON.parse(read('config/toolchain.json')) as { phpExtension?: { minors?: unknown } }).phpExtension?.minors;
-  assert.ok(Array.isArray(minors) && minors.length > 0 && minors.every((minor) => typeof minor === 'string' && /^[0-9]+\.[0-9]+$/.test(minor)), `config/toolchain.json: phpExtension.minors is ${JSON.stringify(minors)}, not a list of PHP minors`);
-  const lines = read(ASSETS).split('\n');
-  const start = lines.indexOf('  platform:');
+const jobOf = (text: string, name: string): string => {
+  const lines = text.split('\n');
+  const start = lines.indexOf(`  ${name}:`);
+  if (start < 0) return '';
   const end = lines.findIndex((line, index) => index > start && /^ {2}[a-z][a-z0-9_-]*:$/.test(line));
-  assert.ok(start >= 0, `${ASSETS} has no job platform`);
-  const steps = lines.slice(start, end < 0 ? undefined : end).flatMap((line) => {
-    const version = /^ +php-version: '?([0-9.]+)'?$/.exec(line)?.[1];
-    if (version !== undefined) return [`setup ${version}`];
-    if (/^ +php-version-file:/.test(line)) return ['setup of .php-version'];
-    return /^ +run: make release-php-ext( |$)/.test(line) ? ['build'] : [];
-  });
-  assert.deepEqual(steps, minors.flatMap((minor) => [`setup ${String(minor)}`, 'build']));
+  return lines.slice(start, end < 0 ? undefined : end).join('\n');
+};
+
+/** Explicit include entries preserve duplicate combinations, which a map keyed by platform would hide. */
+function entriesOf(job: string): Record<string, string>[] {
+  const matrix = job.split('        include:\n')[1]?.split(/^ {4}runs-on:/m)[0] ?? '';
+  return matrix.split(/(?=^ {10}- )/m).filter(block => /^ {10}- /.test(block)).map(block => Object.fromEntries(block.trim().split('\n').map(line => {
+    const match = /^\s*(?:- )?([a-z]+):\s*'?([^'\n]+)'?\s*$/.exec(line);
+    return match === null ? ['invalid', line] : [match[1] as string, match[2] as string];
+  })));
+}
+
+/** The declared workflow uses one key per line; unexpected matrix keys and duplicate entries are findings. */
+function assetFindings(text: string, minors: readonly string[]): string[] {
+  const found: string[] = [];
+  const platform = jobOf(text, 'platform');
+  const php = jobOf(text, 'php');
+  const expectedPlatforms = Object.entries(PLATFORM_RUNNERS).map(([platform, runner]) => ({ platform, runner }));
+  const canonical = (entries: readonly Record<string, string>[]): string[] => entries.map(entry => JSON.stringify(Object.fromEntries(Object.entries(entry).sort()))).sort();
+  for (const [name, body, expected] of [
+    ['platform', platform, expectedPlatforms],
+    ['php', php, expectedPlatforms.flatMap(entry => minors.map(minor => ({ ...entry, php: minor })))],
+  ] as const) {
+    if (!body) { found.push(`missing job ${name}`); continue; }
+    if (valueOf(body.split('\n').find(line => /^ {4}runs-on:/.test(line)) ?? '', 'runs-on') !== '${{ matrix.runner }}') found.push(`${name}: wrong runner selection`);
+    if (JSON.stringify(canonical(entriesOf(body))) !== JSON.stringify(canonical(expected))) found.push(`${name}: matrix differs from required combinations`);
+  }
+  for (const name of [...text.matchAll(/^ {2}([a-z][a-z0-9_-]*):$/gm)].map(match => match[1] as string)) {
+    if (!['platform', 'php'].includes(name) && /^ {4}runs-on: \$\{\{ matrix.runner \}\}$/m.test(jobOf(text, name))) found.push(`${name}: unexpected platform runner`);
+  }
+  const steps = (body: string): string[] => body.split(/(?=^ {6}- )/m).slice(1);
+  const runs = (body: string): string[] => steps(body).flatMap(step => [...step.matchAll(/^ {8}run: (.*)$/gm)].map(match => match[1] as string));
+  const setups = (body: string): string[] => steps(body).filter(step => /uses: shivammathur\/setup-php@/.test(step));
+  const artifacts = (body: string): string[] => steps(body).filter(step => /uses: actions\/upload-artifact@/.test(step)).flatMap(step => [...step.matchAll(/^ {10}name: (.*)$/gm)].map(match => match[1] as string));
+  const platformRuns = runs(platform);
+  for (const target of ['release-go-static', 'release-wheel', 'release-npm-platform']) {
+    if (platformRuns.filter(run => run === `make ${target}`).length !== 1) found.push(`platform: ${target} must run once`);
+    if (runs(php).some(run => run.startsWith(`make ${target}`))) found.push(`php: repeats ${target}`);
+  }
+  if (setups(platform).length !== 0 || platformRuns.some(run => run.startsWith('make release-php-ext'))) found.push('platform: PHP belongs to its own job');
+  const phpSetups = setups(php);
+  if (phpSetups.length !== 1 || !/^ {10}php-version: \$\{\{ matrix.php \}\}$/m.test(phpSetups[0] ?? '') || /php-version-file:/.test(phpSetups[0] ?? '')) found.push('php: select one matrix runtime');
+  const builds = runs(php).filter(run => run.startsWith('make release-php-ext'));
+  if (builds.length !== 1 || builds[0] !== 'make release-php-ext PHP=php EXPECTED_PHP_MINOR=${{ matrix.php }}') found.push('php: build once with the expected minor');
+  if (php.indexOf('uses: shivammathur/setup-php@') > php.indexOf('run: make release-php-ext')) found.push('php: setup must precede the build');
+  if (JSON.stringify(artifacts(platform)) !== JSON.stringify(['assets-${{ matrix.platform }}'])) found.push('platform: wrong artifact identity');
+  if (JSON.stringify(artifacts(php)) !== JSON.stringify(['assets-php-${{ matrix.platform }}-${{ matrix.php }}'])) found.push('php: wrong artifact identity');
+  return found;
+}
+
+test('T1.8-2: assets.yml selects every platform and PHP minor independently', () => {
+  const minors = (JSON.parse(read('config/toolchain.json')) as { phpExtension?: { minors?: unknown } }).phpExtension?.minors;
+  assert.ok(Array.isArray(minors) && minors.length > 0 && minors.every((minor): minor is string => typeof minor === 'string' && /^[0-9]+\.[0-9]+$/.test(minor)), `config/toolchain.json: invalid PHP minors ${JSON.stringify(minors)}`);
+  assert.equal(new Set(minors).size, minors.length, 'supported PHP minors must be distinct');
+  assert.deepEqual(assetFindings(read(ASSETS), minors), []);
+  assert.match(read(RELEASE), /pattern: assets-\*/);
+  assert.match(read(RELEASE), /merge-multiple: true/);
+});
+
+test('T1.8-2: asset ownership rejects missing, duplicate and misidentified jobs', () => {
+  const text = read(ASSETS);
+  const minors = ['8.4', '8.5'];
+  assert.deepEqual(assetFindings(text, minors), []);
+  const php = jobOf(text, 'php');
+  const entry = "          - platform: darwin-arm64\n            runner: macos-15\n            php: '8.5'\n";
+  const mutations: [string, string, string][] = [
+    [entry, '', 'matrix differs'],
+    [entry, entry + entry, 'matrix differs'],
+    [entry, entry.replace('macos-15', 'ubuntu-26.04'), 'matrix differs'],
+    [entry, entry.replace('8.5', '8.6'), 'matrix differs'],
+    ['php-version: ${{ matrix.php }}', "php-version: '8.4'", 'select one matrix runtime'],
+    [' EXPECTED_PHP_MINOR=${{ matrix.php }}', '', 'expected minor'],
+    ['assets-php-${{ matrix.platform }}-${{ matrix.php }}', 'assets-${{ matrix.platform }}', 'artifact identity'],
+    ['run: make release-php-ext PHP=php EXPECTED_PHP_MINOR=${{ matrix.php }}', 'run: make release-wheel', 'expected minor'],
+  ];
+  for (const [from, to, message] of mutations) {
+    assert.ok(php.includes(from), `the PHP fixture contains ${from}`);
+    const changed = text.replace(php, php.replace(from, to));
+    assert.ok(assetFindings(changed, minors).some(finding => finding.includes(message)), `the workflow accepted ${from} -> ${to}`);
+  }
+  const build = '      - name: build the PHP extension\n        if: ${{ !cancelled() }}\n        run: make release-php-ext PHP=php EXPECTED_PHP_MINOR=${{ matrix.php }}\n';
+  assert.ok(php.includes(build));
+  assert.ok(assetFindings(text.replace(php, php.replace(build, build + build)), minors).some(finding => finding.includes('expected minor')));
+  const setup = php.split(/(?=^ {6}- )/m).find(step => step.includes('uses: shivammathur/setup-php@'));
+  assert.ok(setup);
+  assert.ok(assetFindings(text.replace(php, php.replace(setup, setup + setup)), minors).some(finding => finding.includes('select one matrix runtime')));
+  assert.ok(assetFindings(text.replace(php, php.replace(setup, '') + setup), minors).some(finding => finding.includes('setup must precede')));
+  assert.ok(assetFindings(text.replace('  npm:\n    runs-on: ubuntu-26.04-arm', '  npm:\n    runs-on: ${{ matrix.runner }}'), minors).some(finding => finding.includes('unexpected platform runner')));
+  const wheel = '        run: make release-wheel';
+  assert.ok(assetFindings(text.replace(wheel, wheel + '\n      - name: duplicated wheel\n' + wheel), minors).some(finding => finding.includes('release-wheel must run once')));
 });
 
 test('release.yml uploads the assets of each platform to the draft release before it makes the release public', () => {
