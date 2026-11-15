@@ -10,7 +10,8 @@
 //   - every run step is one make target that the Makefile defines, or that the release recipes define that it includes
 //     (packages/release.mk, which binding release-recipes writes and which is not tracked, binding GN-19h), with
 //     arguments NAME=value or expressions alone;
-//   - every job of a workflow that CI runs (ci.yml and the workflows that it calls) is one recipe of the Makefile: it has
+//   - every job of a workflow that CI runs (ci.yml and the workflows that it calls) and of release.yml is one recipe of
+//     the Makefile, and a job of release.yml takes the values of its run through the env of the job: it has
 //     one run step `make ci-<job>` with make variables alone, whose value is a word, a matrix value or an input of the
 //     called workflow, and every other step is a uses step; a run step has no condition, environment or shell of its own,
 //     and no job or workflow sets an environment. The job ci-passed passes the JSON of needs, `RESULTS='${{ toJSON(needs)
@@ -116,7 +117,9 @@ function jobFindings(file: string, text: string, targets: Set<string>): string[]
   for (const name of jobNames(text)) {
     const job = jobOf(text, name);
     const at = `${file}: job ${name}`;
-    if (/^ {4}(?:env|defaults):/m.test(job)) found.push(`${at}: sets an environment or defaults for its steps`);
+    // The jobs of release.yml take the values of the event and of the run, such as the token and the outputs of needs,
+    // through the env of the job, so that their run line stays make ci-<job>.
+    if (/^ {4}defaults:/m.test(job) || (file !== RELEASE && /^ {4}env:/m.test(job))) found.push(`${at}: sets an environment or defaults for its steps`);
     if (/^ {4}uses: /m.test(job)) {
       if (/^ {4}steps:/m.test(job)) found.push(`${at}: calls a workflow and has steps`);
       continue;
@@ -147,9 +150,9 @@ function jobFindings(file: string, text: string, targets: Set<string>): string[]
   return found;
 }
 
-test('every job of a workflow that CI runs is one recipe ci-<job> of the Makefile, which its one run step calls', () => {
+test('every job of a workflow that CI or the release runs is one recipe ci-<job> of the Makefile, which its one run step calls', () => {
   const targets = makeTargets();
-  const list = ciWorkflows();
+  const list = [...ciWorkflows(), RELEASE];
   assert.ok(list.includes(ASSETS), list.join('\n'));
   assert.deepEqual(list.flatMap((file) => jobFindings(file, read(file), targets)), []);
 });
@@ -358,14 +361,15 @@ test('T1.8-2: asset ownership rejects missing, duplicate and misidentified jobs'
   }
 });
 
-test('release.yml uploads the assets of each platform to the draft release before it makes the release public', () => {
-  const steps = read(RELEASE).split('\n').flatMap((line) => {
-    const run = valueOf(line, 'run');
-    if (run !== undefined) return [RUN.exec(run)?.[1] ?? run];
-    return /uses: actions\/download-artifact@/.test(line) ? ['download-artifact'] : [];
-  });
-  const order = ['release-publish', 'download-artifact', 'release-go-module', 'release-platform-assets', 'release-undraft'];
-  const at = order.map((step) => steps.indexOf(step));
-  assert.ok(at.every((index) => index >= 0), `missing: ${order.filter((_, index) => at[index] < 0).join(', ')}`);
-  assert.deepEqual([...at].sort((a, b) => a - b), at, steps.join(', '));
+test('release.yml downloads the assets of each platform before ci-release, which adds them after the draft release exists', () => {
+  const job = jobOf(read(RELEASE), 'release');
+  const steps = stepsOf(job);
+  const download = steps.findIndex((step) => /uses: actions\/download-artifact@/.test(step) && /path: var\/release\/platform-assets$/m.test(step));
+  const run = steps.findIndex((step) => stepRun(step) !== undefined);
+  assert.ok(download >= 0 && download < run, 'the job downloads into var/release/platform-assets before its run step');
+  const recipe = recipeOf(read('Makefile'), 'ci-release');
+  const order = [/ release-publish$/, /cp -R var\/release\/platform-assets\/\. var\/release\/assets\//, / release-go-module$/, / release-platform-assets$/, / release-undraft$/]
+    .map((pattern) => recipe.findIndex((line) => pattern.test(line)));
+  assert.ok(order.every((index) => index >= 0), recipe.join('\n'));
+  assert.deepEqual([...order].sort((x, y) => x - y), order, recipe.join('\n'));
 });
