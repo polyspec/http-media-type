@@ -1,17 +1,19 @@
 # The checks of http-media-type on GitHub: the push of main and every manual run (workflow_dispatch) run one job per entry of the
-# matrix, and each entry runs its `targets` with `make ci-targets`. The entries together run every target of `make check`
-# and `make test-bindings`, each once, and `make release-coverage`. A failure never stops the run: the matrix does not
-# cancel the other entries (fail-fast: false), every step after the first runs after a failed step
-# (`if: ${{ !cancelled() }}`), and `make ci-targets` runs every target to its end. Each matrix job writes the job summary
-# and uploads its report var/ci/<name>/: the status, the first failure lines and the full log of each target. The last job,
-# ci-passed, passes only when every other job of this workflow passed; a release takes the id of such a run and tags its
-# commit (.github/workflows/release.yml). The job assets calls .github/workflows/assets.yml, which builds the assets of each
-# platform of the bindings as a release does. Every step that runs a command runs one make target, the jobs run on
-# ubuntu-26.04-arm but for the platform runners of assets.yml, the actions are pinned by commit and no step has a time limit.
+# matrix of the job check, and each entry runs `make ci-check NAME=<name>`, whose recipe holds the installs and the targets
+# of the entry. The entries together run every target of `make check` and `make test-bindings`, each once, and `make
+# release-coverage`. A failure never stops the run: the matrix does not cancel the other entries (fail-fast: false), and
+# the recipe runs every target to its end. Each matrix job writes the job summary and uploads its report var/ci/<name>/:
+# the status, the first failure lines and the full log of each target. The last job, ci-passed, passes only when every
+# other job of this workflow passed; a release takes the id of such a run and tags its commit (.github/workflows/release.yml).
+# The job assets calls .github/workflows/assets.yml, which builds the assets of each platform of the bindings as a release
+# does.
 #
-# Each job runs the bootstrap right after the checkout (uses: ./.github/actions/bootstrap), then installs every tool that
-# the checkout pins (mise.toml with mise.lock, rust-toolchain.toml, and the PHP of .php-version, which setup-php provides);
-# the entry that tests the PHP extension also installs PHPUnit of composer.lock. No job waits for another job or reads its build output.
+# Every job is one recipe of the Makefile (AGENTS.md, "CI and release"): its one run step is `make ci-<job>` with make
+# variables alone, and every other step is a `uses:` step that provisions the runner or carries a result: the checkout,
+# the bootstrap (uses: ./.github/actions/bootstrap), the PHP of .php-version, which setup-php provides and make
+# install-tools wraps in var/tools/bin, and the upload of the report. A local run is the same call, make ci-check NAME=core.
+# The jobs run on ubuntu-26.04-arm but for the platform runners of assets.yml, the actions are pinned by commit and no step
+# has a time limit. No job waits for another job or reads its build output.
 name: ci
 
 on:
@@ -30,47 +32,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # The installs and the targets of each entry are CI_CHECK_INSTALLS_<name> and CI_CHECK_TARGETS_<name> of the
+          # Makefile.
           - name: core
-            targets: lint-rust fmt-check test bindings-check docs-check test-scripts release-coverage
           - name: bindings
-            php: true
-            targets: lint-bindings check-declarations test-python test-node test-wasm test-php test-go
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        id: checkout
       - uses: ./.github/actions/bootstrap
-        id: bootstrap
-        if: ${{ !cancelled() }}
       # shivammathur/setup-php 2.40.0: the PHP of .php-version, which make install-tools wraps in var/tools/bin; every entry
       # installs every tool of the checkout, so every entry sets it up.
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
-        id: php
-        if: ${{ !cancelled() }}
         with:
           php-version-file: .php-version
           tools: none
           coverage: none
-      - id: tools
-        if: ${{ !cancelled() }}
-        run: make install-tools
-      # The crates of Cargo.lock, which binding (installed by the bootstrap from package-lock.json) and the binding targets
-      # read offline.
-      - id: binding
-        if: ${{ !cancelled() }}
-        run: make install-binding
-      - id: php-tools
-        if: ${{ !cancelled() && matrix.php }}
-        run: make install-php-tools
-      - id: check
-        if: ${{ !cancelled() }}
-        run: make ci-targets TARGETS="${{ matrix.targets }}" CI_REPORT=var/ci/${{ matrix.name }}
-      - id: summary
-        if: ${{ !cancelled() }}
-        env:
-          CI_STEPS: ${{ toJSON(steps) }}
-        run: make ci-summary CI_REPORT=var/ci/${{ matrix.name }}
+      - run: make ci-check NAME=${{ matrix.name }}
+      # The report of the entry, also after a failed check.
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        id: report
         if: ${{ !cancelled() }}
         with:
           name: ci-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -82,7 +60,8 @@ jobs:
     uses: ./.github/workflows/assets.yml
   # The job that fails the run when any other job did not pass, so a release, which takes a successful run by its id,
   # holds every job. It runs after every other job, also after a failed, skipped or cancelled one (if: always()), and
-  # make ci-passed fails unless every job of needs has the result success.
+  # make ci-passed fails unless every job of needs has the result success. The job exists only in CI, since it judges the
+  # results of the other jobs, which its run step passes as the JSON of needs.
   ci-passed:
     if: ${{ always() }}
     needs: [check, assets]
@@ -90,5 +69,4 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/bootstrap
-      - name: make ci-passed
-        run: make ci-passed RESULTS='${{ toJSON(needs) }}' FAIL_SKIPPED=1
+      - run: make ci-passed RESULTS='${{ toJSON(needs) }}'

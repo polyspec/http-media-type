@@ -1,7 +1,16 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5bfa23d18ccd16b7c5889cf05dd8dfcd9711bf8a1962efb17c0598706acb8424 -->
+<!-- source-sha256: d627b040be216a1b48916fcd63f38deede733462bf0f3b036f58ebdca7491205 -->
 
 ## Unreleased
+
+- `ci.yml`과 `assets.yml`의 job은 각각 Makefile의 recipe 하나다(T1.9). job의 run step 하나는 `make ci-check
+  NAME=<name>`, `make ci-platform`, `make ci-php EXPECTED_PHP_MINOR=<minor>`, `make ci-npm` 중 하나이고, 호출된 workflow의
+  input인 `RELEASE`를 받는다. job `ci-passed`는 `make ci-passed RESULTS='<needs의 JSON>'`을 실행한다. 이전에는 job이 설치,
+  step 조건, 대상을 YAML의 step과 expression에 가졌으므로 local 실행은 GitHub runner 없이 job을 반복할 수 없었다. 이제
+  recipe가 먼저 설치를 실행하고 그것이 실패하면 멈추며, 다음에 검사를 끝까지 실행하고, 마지막에 요약을 항상 쓴다. job
+  `check`의 각 항목의 대상은 Makefile의 `CI_CHECK_TARGETS_<name>`이고, `ci-passed`는 `FAIL_SKIPPED`를 스스로 정한다.
+  `tests/scripts/workflows.test.mts`는 run step이 둘 이상인 job, run step의 조건이나 환경 변수, matrix 값이나 input이 아닌
+  expression, `ci-<job>`이 아닌 대상을 실패시킨다. 이 test는 변경 전의 workflow에서 실패했고 변경 뒤에 통과한다.
 
 - 과거 binding 0.0.2 고정 task T1.3을 철회한다. 후속 고정은 release된 binding 0.0.4(T1.4-1)와
   binding 0.0.5(T1.7-1)를 선택한다. 0.0.2 asset release를 완료했다고 주장하지 않는다. 이전 고정을 복원할 작업은 필요하지 않다. 이는 후속

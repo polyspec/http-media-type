@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 49b929727301c21393ddec845963d64e123c0125bf378ed0b8181400022a66a7 -->
+<!-- source-sha256: ed6c47f44634496b545f3bc163cc7cc5937beedb60f388708f53e8366098afe1 -->
 # 개발
 
 모든 polyspec 저장소의 작업 원칙은 polyspec의 `PRINCIPLES.md`에 있다. 이 파일은 이 저장소의 규칙만
@@ -108,18 +108,32 @@
 
 ## CI와 release
 
+- CI가 실행하는 workflow(`ci.yml`, `assets.yml`, 그리고 그것들이 호출하는 모든 workflow)의 job은 각각 Makefile의
+  recipe `ci-<job>` 하나다. job의 run step은 정확히 하나이고 make 변수만 인자로 받는 `make ci-<job>`이다. matrix 값이나
+  호출된 workflow의 input은 `NAME=${{ matrix.key }}` 또는 `NAME=${{ inputs.key }}`로 넘기고, run 줄에는 다른 expression이
+  없다. 나머지 step은 모두 runner를 준비하거나 결과를 옮기는 `uses:` step이다. checkout, `setup-php`, bootstrap action,
+  보고서나 asset의 upload가 그것이다. 조건 `if:`는 `uses:` step에만 둘 수 있고, run step, job, workflow는 환경 변수를
+  정하지 않는다. recipe가 job의 순서와 조건을 가진다. 먼저 설치를 실행하고 그것이 실패하면 멈추며, 다음에 검사를 하나씩
+  끝까지 실행하고(`make ci-targets`, 또는 `make -k` 하나의 goal들), 마지막에 보고서를 항상 쓴다. recipe의 status는 검사의
+  status다. YAML이 가졌던 값, 예를 들어 matrix 항목의 대상은 Makefile의 변수다. 이유는 다음과 같다. 내용이 YAML의 step,
+  step 조건, expression에 있는 job은 GitHub runner에서만 돌므로 local 실행이 CI의 실행과 같을 수 없었다. 내용이 recipe에
+  있으면 `make ci-<job> NAME=value`가 local과 CI에서 같은 호출이다. 판정 job `ci-passed`는 다른 job의 결과를 읽으므로 CI에만
+  있다. 그 run step 하나는 `make ci-passed RESULTS='${{ toJSON(needs) }}'`이고, 이것이 허용되는 유일한 다른 expression이다.
+  `release.yml`은 이 규칙의 대상이 아니다. `make test-scripts`가 이 규칙을 검사한다(`tests/scripts/workflows.test.mts`).
 - `assets.yml`은 PHP 이외의 build를 platform마다 한 번씩 `platform`에 두고 `php`에 platform과
   `phpExtension.minors`의 모든 조합을 둔다. 각 PHP 항목은 `matrix.php`의 setup 하나,
-  `make release-php-ext PHP=php EXPECTED_PHP_MINOR=${{ matrix.php }}` 하나, 서로 다른 artifact
-  `assets-php-${{ matrix.platform }}-${{ matrix.php }}`를 가진다. 두 job은 각각 자기 platform의 runner를 쓴다.
+  `make ci-php EXPECTED_PHP_MINOR=${{ matrix.php }}` 하나, 서로 다른 artifact
+  `assets-php-${{ matrix.platform }}-${{ matrix.php }}`를 가진다. `ci-php`의 recipe는 `make release-php-ext
+  PHP=php EXPECTED_PHP_MINOR=$(EXPECTED_PHP_MINOR)`로 extension을 한 번 빌드한다. 두 job은 각각 자기 platform의 runner를 쓴다.
   release는 `assets-*` artifact를 병합한다. 이 소유 관계는 한 minor가 다른 minor의 결과를 대체하지 못하게 하고
   local run이 실제 runtime 하나를 선택하게 한다. workflow test는 선언된 구조를 증명한다. native 검증은 expected-minor
   검사(B2.275)를 가진 binding recipe의 공개, 재생성, 실제 실행을 기다린다. 건너뛴 setup action은 runtime 선택을
   증명하지 않는다.
 - `.github/workflows/ci.yml`은 `main`의 push와 수동 실행에서 돈다. matrix 항목마다 job 하나다. `core`는 `lint-rust`,
   `fmt-check`, `test`, `bindings-check`, `docs-check`, `test-scripts`, `release-coverage`를 실행하고, `bindings`는 `make test-bindings`의 대상을 실행한다.
-  각 job은 그 대상을 `make ci-targets`로 실행한다. `make ci-targets`는 모든 대상을 끝까지 실행하고 보고서
-  `var/ci/<name>/`을 쓴다. job `assets`는 `.github/workflows/assets.yml`을 호출하고, 그것은 release와 같이 각 플랫폼의
+  각 job은 `make ci-check NAME=<name>`을 실행한다. 그 recipe는 항목의 도구를 설치하고(`CI_CHECK_INSTALLS_<name>`), 항목의
+  대상(`CI_CHECK_TARGETS_<name>`)을 `make ci-targets`로 실행하며, `make ci-summary`로 job의 요약을 쓴다. `make ci-targets`는
+  모든 대상을 끝까지 실행하고 보고서 `var/ci/<name>/`을 쓴다. job `assets`는 `.github/workflows/assets.yml`을 호출하고, 그것은 release와 같이 각 플랫폼의
   asset을 빌드한다. 그래서 빌드되지 않는 asset이 tag가 생기기 전에 release를 멈춘다. 마지막 job `ci-passed`는 다른 모든
   job이 통과했을 때만 통과한다. job은 `ubuntu-26.04-arm`에서 돈다. 다만 `assets.yml`의 job `platform`과 `php`는 `ubuntu-26.04`,
   `ubuntu-26.04-arm`, `macos-15`에서 돈다. 플랫폼의 asset은 그 플랫폼에서만 빌드되고 로드되며, release의 어떤 도구도 다른

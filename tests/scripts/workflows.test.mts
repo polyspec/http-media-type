@@ -229,7 +229,10 @@ function recipeOf(makefile: string, target: string): string[] {
 const makeCalls = (recipe: readonly string[]): string[] =>
   recipe.flatMap((line) => line.split('$(MAKE)').slice(1).flatMap((call) => {
     const words = (call.split(/;|&&|\|\|/)[0] ?? '').match(/[A-Z][A-Z0-9_]*=(?:"[^"]*"|\S+)|\S+/g) ?? [];
-    const cleaned = words.map((word) => word.replace(/\)+$/, '')).filter((word) => word !== '' && !word.startsWith('-'));
+    // A word that ends the call of a function of make, such as release-binding-check) of $(if ...), loses the parentheses
+    // that it does not open.
+    const unwrap = (word: string): string => (word.endsWith(')') && word.split('(').length < word.split(')').length ? unwrap(word.slice(0, -1)) : word);
+    const cleaned = words.map(unwrap).filter((word) => word !== '' && !word.startsWith('-'));
     const variables = cleaned.filter((word) => /^[A-Z][A-Z0-9_]*=/.test(word));
     return cleaned.filter((word) => !word.includes('=')).map((goal) => ['make', goal, ...variables].join(' '));
   }));

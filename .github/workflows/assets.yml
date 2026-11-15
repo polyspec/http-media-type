@@ -4,12 +4,14 @@
 #
 # The jobs platform and php run on the runner of their platform, ubuntu-26.04, ubuntu-26.04-arm or macos-15, the one exception to the
 # runner rule of AGENTS.md: the asset of a platform is built and loaded only on that platform, because no tool of the
-# release compiles for another platform (tests/scripts/workflows.test.mts checks each combination). Each job writes the
-# release recipes of the contract with the binding of package.json (make release-recipes, packages/release.mk), then builds
-# the static library of the Go module, the abi3 wheel and the npm platform package once per platform. The separate php
-# job builds one extension per platform/minor combination; the job npm packs the npm package itself with the wasm-bindgen of mise.toml. Each uploads
-# var/release/assets as an artifact, which the workflow release downloads. Each run step is one make target, and the build
-# steps after the first also run after a failed one, so one run names every asset that does not build.
+# release compiles for another platform (tests/scripts/workflows.test.mts checks each combination). Each job is one recipe
+# of the Makefile, which its one run step calls (AGENTS.md, "CI and release"): make ci-platform, make ci-php
+# EXPECTED_PHP_MINOR=<minor> and make ci-npm, each with RELEASE, the input release. Each recipe installs the tools, writes
+# the release recipes of the contract with the binding of package.json (make release-recipes, packages/release.mk) and
+# builds: ci-platform the static library of the Go module, the abi3 wheel and the npm platform package once per platform,
+# each to its end; ci-php one extension per platform/minor combination with the PHP that setup-php selects for the entry;
+# ci-npm the npm package itself with the wasm-bindgen of mise.toml. Every other step is a uses step: the checkout, the
+# bootstrap, setup-php and the upload of var/release/assets as an artifact, which the workflow release downloads.
 name: assets
 
 on:
@@ -48,26 +50,7 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
       - uses: ./.github/actions/bootstrap
-      # The Rust toolchain of rust-toolchain.toml with llvm-tools and the musl targets, and the uv and the Python of
-      # mise.toml, with which uv builds the wheel.
-      - name: install Rust, uv and Python
-        run: make install-tools TOOLS="rust uv python"
-      # The crates of Cargo.lock, which binding generate reads offline.
-      - name: fetch the locked crates
-        run: make install-binding
-      - name: write the release recipes
-        run: make release-recipes
-      - name: run the release check of binding
-        if: ${{ inputs.release }}
-        run: make release-binding-check
-      - name: build the static library of the Go module
-        run: make release-go-static
-      - name: build the wheel
-        if: ${{ !cancelled() }}
-        run: make release-wheel
-      - name: build the npm platform package
-        if: ${{ !cancelled() }}
-        run: make release-npm-platform
+      - run: make ci-platform RELEASE=${{ inputs.release }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
@@ -104,32 +87,13 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
       - uses: ./.github/actions/bootstrap
-        if: ${{ !cancelled() }}
-      - name: install Rust
-        if: ${{ !cancelled() }}
-        run: make install-tools TOOLS=rust
-      - name: fetch the locked crates
-        if: ${{ !cancelled() }}
-        run: make install-binding
-      - name: write the release recipes
-        if: ${{ !cancelled() }}
-        run: make release-recipes
-      - name: run the release check of binding
-        if: ${{ !cancelled() && inputs.release }}
-        run: make release-binding-check
-      - name: install the LLVM of config/toolchain.json
-        if: ${{ !cancelled() }}
-        run: make install-llvm
       # Each entry owns one native PHP selection and one distinctly named asset.
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
-        if: ${{ !cancelled() }}
         with:
           php-version: ${{ matrix.php }}
           tools: none
           coverage: none
-      - name: build the PHP extension
-        if: ${{ !cancelled() }}
-        run: make release-php-ext PHP=php EXPECTED_PHP_MINOR=${{ matrix.php }}
+      - run: make ci-php EXPECTED_PHP_MINOR=${{ matrix.php }} RELEASE=${{ inputs.release }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
@@ -144,20 +108,7 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
       - uses: ./.github/actions/bootstrap
-      # The Rust toolchain of rust-toolchain.toml with the target wasm32-unknown-unknown.
-      - name: install Rust
-        run: make install-tools TOOLS=rust
-      - name: fetch the locked crates
-        run: make install-binding
-      - name: write the release recipes
-        run: make release-recipes
-      - name: install the wasm-bindgen of mise.toml
-        run: make install-wasm-bindgen
-      - name: run the release check of binding
-        if: ${{ inputs.release }}
-        run: make release-binding-check
-      - name: pack the npm package
-        run: make release-npm
+      - run: make ci-npm RELEASE=${{ inputs.release }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:

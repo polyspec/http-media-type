@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Every job of `ci.yml` and `assets.yml` is one recipe of the Makefile (T1.9): its one run step is `make ci-check
+  NAME=<name>`, `make ci-platform`, `make ci-php EXPECTED_PHP_MINOR=<minor>` or `make ci-npm`, with `RELEASE`, the input
+  of the called workflow, and the job `ci-passed` runs `make ci-passed RESULTS='<json of needs>'`. Before, a job held
+  its installs, its step conditions and its targets in YAML steps and expressions, so a local run could not repeat it
+  without the runner of GitHub. The recipe now runs the installs first and stops at their failure, then the checks to
+  their end, then the summary always; the targets of each entry of the job `check` are `CI_CHECK_TARGETS_<name>` of
+  the Makefile, and `ci-passed` sets `FAIL_SKIPPED` itself. `tests/scripts/workflows.test.mts` fails a job with more
+  than one run step, a condition or an environment on a run step, an expression other than a matrix value or an input,
+  and a target other than `ci-<job>`; it failed on the workflows before the change and passes after it.
+
 - The historical binding 0.0.2 pin task T1.3 is withdrawn: the later pins select released binding 0.0.4
   (T1.4-1) and binding 0.0.5 (T1.7-1). The 0.0.2 asset release is not claimed complete. No work to restore the older pin is needed.
   This records supersession, without claiming a newly run verification of that old pin. T1.4 stays withdrawn and

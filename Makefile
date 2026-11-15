@@ -211,10 +211,17 @@ COMPOSER := $(KIT_TOOLS)/mise/shims/composer
 install-php-tools:
 	$(ONLINE) $(COMPOSER) install --no-interaction --no-progress
 
-# ---- CI (.github/workflows/ci.yml) -------------------------------------------------------------------------------------
+# ---- CI (.github/workflows/ci.yml, .github/workflows/assets.yml) -------------------------------------------------------
+# Each job of a workflow that CI runs is one recipe ci-<job>, which the one run step of the job calls with make variables
+# alone, a matrix value or an input of the called workflow as NAME=value (AGENTS.md, "CI and release"). The recipe holds
+# the order and the conditions of the job: its installs first, which stop the job at their failure, then its checks, each
+# run to its end, then its report; its status is that of the checks. A local run is the same call, for example make
+# ci-check NAME=core or make ci-php EXPECTED_PHP_MINOR=8.4.
+#
 # ci-targets runs TARGETS past failures with the utility of kit and writes CI_REPORT: the log of each target, record.json
-# and summary.md; ci-summary writes summary.md again, also for a run that stopped; ci-passed, the last job of the
-# workflow, fails unless every job of RESULTS, the JSON of toJSON(needs), has the result success.
+# and summary.md; ci-summary writes summary.md again, also for a run that stopped, and names each install of CI_STEPS
+# that did not succeed; ci-passed, the last job of the workflow, fails unless every job of RESULTS, the JSON of
+# toJSON(needs), has the result success, and a skipped job fails it too (FAIL_SKIPPED).
 CI_REPORT ?= var/report/ci-targets
 ci-targets:
 	$(NODE) $(KIT)/ci-targets.mjs -k $(CI_REPORT) $(TARGETS)
@@ -223,7 +230,60 @@ ci-summary:
 	$(NODE) $(KIT)/ci-targets.mjs --summary $(CI_REPORT)
 
 ci-passed:
-	$(NODE) $(KIT)/ci-passed.mjs
+	FAIL_SKIPPED=1 $(NODE) $(KIT)/ci-passed.mjs
+
+# The entries of the job check of ci.yml by NAME: the installs and the targets of each. Together the entries run every
+# target of make check and make test-bindings, each once, and make release-coverage; the entry bindings also installs
+# PHPUnit of composer.lock.
+CI_CHECK_NAMES := core bindings
+CI_CHECK_INSTALLS_core := install-tools install-binding
+CI_CHECK_TARGETS_core := lint-rust fmt-check test bindings-check docs-check test-scripts release-coverage
+CI_CHECK_INSTALLS_bindings := install-tools install-binding install-php-tools
+CI_CHECK_TARGETS_bindings := lint-bindings check-declarations test-python test-node test-wasm test-php test-go
+
+# ci-check runs the installs of the entry NAME in order and stops at the first that fails, then its targets with
+# ci-targets into var/ci/NAME, then ci-summary always, with the outcome of each install as CI_STEPS.
+.PHONY: ci-check ci-platform ci-php ci-npm
+ci-check:
+	@test -n "$(filter $(NAME),$(CI_CHECK_NAMES))" || { echo 'ci-check: NAME is one of $(CI_CHECK_NAMES), for example make ci-check NAME=core' >&2; exit 2; }
+	@status=0; steps=; \
+	for install in $(CI_CHECK_INSTALLS_$(NAME)); do \
+		if $(MAKE) --no-print-directory $$install; then outcome=success; else outcome=failure; status=1; fi; \
+		steps="$$steps$${steps:+,}\"$$install\":{\"outcome\":\"$$outcome\"}"; \
+		test $$status -eq 0 || break; \
+	done; \
+	test $$status -ne 0 || $(MAKE) --no-print-directory ci-targets TARGETS="$(CI_CHECK_TARGETS_$(NAME))" CI_REPORT=var/ci/$(NAME) || status=1; \
+	CI_STEPS="{$$steps}" $(MAKE) --no-print-directory ci-summary CI_REPORT=var/ci/$(NAME) || status=1; \
+	exit $$status
+
+# The jobs of assets.yml. RELEASE=true, which the workflow release passes, runs the release check of binding before a
+# job builds. Each recipe line stops the job at its failure; the builds of ci-platform are the goals of one make -k, which
+# builds each to its end and fails after the last when one failed.
+ci-platform:
+	$(MAKE) --no-print-directory install-tools TOOLS="rust uv python"
+	$(MAKE) --no-print-directory install-binding
+	$(MAKE) --no-print-directory release-recipes
+	$(if $(filter true,$(RELEASE)),$(MAKE) --no-print-directory release-binding-check)
+	$(MAKE) --no-print-directory -k release-go-static release-wheel release-npm-platform
+
+# ci-php builds the extension for the PHP minor EXPECTED_PHP_MINOR with the php of PATH, which the job selects with
+# setup-php for its matrix entry before the recipe runs.
+ci-php:
+	@test -n "$(EXPECTED_PHP_MINOR)" || { echo 'ci-php: EXPECTED_PHP_MINOR is required, for example make ci-php EXPECTED_PHP_MINOR=8.4' >&2; exit 2; }
+	$(MAKE) --no-print-directory install-tools TOOLS=rust
+	$(MAKE) --no-print-directory install-binding
+	$(MAKE) --no-print-directory release-recipes
+	$(if $(filter true,$(RELEASE)),$(MAKE) --no-print-directory release-binding-check)
+	$(MAKE) --no-print-directory install-llvm
+	$(MAKE) --no-print-directory release-php-ext PHP=php EXPECTED_PHP_MINOR=$(EXPECTED_PHP_MINOR)
+
+ci-npm:
+	$(MAKE) --no-print-directory install-tools TOOLS=rust
+	$(MAKE) --no-print-directory install-binding
+	$(MAKE) --no-print-directory release-recipes
+	$(MAKE) --no-print-directory install-wasm-bindgen
+	$(if $(filter true,$(RELEASE)),$(MAKE) --no-print-directory release-binding-check)
+	$(MAKE) --no-print-directory release-npm
 
 # ---- Release recipes of the bindings (binding GN-19h) --------------------------------------------------------------------
 # binding release-recipes writes the recipes that build the assets of each platform (the Go static library, the abi3 wheel,

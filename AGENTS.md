@@ -112,9 +112,24 @@ rules of this repository.
 
 ## CI and release
 
+- Every job of a workflow that CI runs (`ci.yml`, `assets.yml` and any workflow that they call) is one recipe
+  `ci-<job>` of the Makefile. The job has exactly one run step, `make ci-<job>` with make variables alone; a matrix
+  value or an input of the called workflow is passed as `NAME=${{ matrix.key }}` or `NAME=${{ inputs.key }}`, and no
+  other expression appears in a run line. Every other step is a `uses:` step that provisions the runner or carries a
+  result: the checkout, `setup-php`, the bootstrap action, the upload of a report or an asset. A condition `if:` is
+  allowed only on a `uses:` step, and no run step, job or workflow sets an environment. The recipe holds the order and
+  the conditions of the job: its installs first, which stop it at their failure, then its checks, each run to its end
+  (`make ci-targets`, or the goals of one `make -k`), then its report always, and its status is that of the checks;
+  the values that the YAML held, such as the targets of a matrix entry, are variables of the Makefile. The reason: a
+  job whose content is in YAML steps, step conditions and expressions runs only on the runner of GitHub, so a local
+  run could not be the run of CI; with the content in the recipe, `make ci-<job> NAME=value` is the same call locally
+  and in CI. The judgement job `ci-passed` reads the results of the other jobs and exists only in CI: its one run step
+  is `make ci-passed RESULTS='${{ toJSON(needs) }}'`, the only other expression. `release.yml` is not under this rule.
+  `make test-scripts` checks it (`tests/scripts/workflows.test.mts`).
 - `assets.yml` keeps the non-PHP builds in `platform` once per platform and gives `php` the complete
   platform by `phpExtension.minors` matrix. Each PHP entry has one setup of `matrix.php`, one
-  `make release-php-ext PHP=php EXPECTED_PHP_MINOR=${{ matrix.php }}` and the distinct artifact
+  `make ci-php EXPECTED_PHP_MINOR=${{ matrix.php }}`, whose recipe builds the extension once with `make release-php-ext
+  PHP=php EXPECTED_PHP_MINOR=$(EXPECTED_PHP_MINOR)`, and the distinct artifact
   `assets-php-${{ matrix.platform }}-${{ matrix.php }}`. Both jobs use the runner of their platform. The release merges
   `assets-*` artifacts. This ownership prevents one minor from replacing another and lets a local run select one
   real runtime. Workflow tests establish the declared structure; native proof waits for the published binding
@@ -122,8 +137,9 @@ rules of this repository.
   runtime selection.
 - `.github/workflows/ci.yml` runs on the push of `main` and on a manual run, one job per matrix entry: `core` runs
   `lint-rust`, `fmt-check`, `test`, `bindings-check`, `docs-check`, `test-scripts` and `release-coverage`, and `bindings` runs the targets of `make
-  test-bindings`. Each job runs them with `make ci-targets`, which runs every target to its end and writes the report
-  `var/ci/<name>/`. The job `assets` calls `.github/workflows/assets.yml`, which builds the assets of each platform as a
+  test-bindings`. Each job runs `make ci-check NAME=<name>`, whose recipe installs the tools of the entry
+  (`CI_CHECK_INSTALLS_<name>`), runs its targets (`CI_CHECK_TARGETS_<name>`) with `make ci-targets`, which runs every
+  target to its end and writes the report `var/ci/<name>/`, and writes the summary of the job with `make ci-summary`. The job `assets` calls `.github/workflows/assets.yml`, which builds the assets of each platform as a
   release does, so that an asset that does not build stops the release before a tag exists. The last job `ci-passed`
   passes only when every other job passed. The jobs run on `ubuntu-26.04-arm`, but for the jobs `platform` and `php` of
   `assets.yml`, which runs on `ubuntu-26.04`, `ubuntu-26.04-arm` and `macos-15`, because the asset of a platform is
