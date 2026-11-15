@@ -112,7 +112,7 @@ rules of this repository.
 
 ## CI and release
 
-- Planned in T1.8-2: `assets.yml` keeps the non-PHP builds in `platform` once per platform and gives `php` the complete
+- `assets.yml` keeps the non-PHP builds in `platform` once per platform and gives `php` the complete
   platform by `phpExtension.minors` matrix. Each PHP entry has one setup of `matrix.php`, one
   `make release-php-ext PHP=php EXPECTED_PHP_MINOR=${{ matrix.php }}` and the distinct artifact
   `assets-php-${{ matrix.platform }}-${{ matrix.php }}`. Both jobs use the runner of their platform. The release merges
@@ -125,7 +125,7 @@ rules of this repository.
   test-bindings`. Each job runs them with `make ci-targets`, which runs every target to its end and writes the report
   `var/ci/<name>/`. The job `assets` calls `.github/workflows/assets.yml`, which builds the assets of each platform as a
   release does, so that an asset that does not build stops the release before a tag exists. The last job `ci-passed`
-  passes only when every other job passed. The jobs run on `ubuntu-26.04-arm`, but for the job `platform` of
+  passes only when every other job passed. The jobs run on `ubuntu-26.04-arm`, but for the jobs `platform` and `php` of
   `assets.yml`, which runs on `ubuntu-26.04`, `ubuntu-26.04-arm` and `macos-15`, because the asset of a platform is
   built and loaded only on that platform and no tool of the release compiles for another (binding GN-19a). The jobs pin
   every action by its commit, set no `timeout-minutes` and run every command of a step as one make target, so that the
@@ -145,7 +145,7 @@ rules of this repository.
   of the PHP extension `packages/php-ext`, whose `composer.json` tells PIE to download a pre-packaged binary. The
   workflow `assets.yml` builds the assets of each platform with the recipes of binding: the static library of the Go
   module, the abi3 wheel, the PHP extension for each PHP minor of `phpExtension.minors` of `config/toolchain.json` (8.4
-  and 8.5; `make test-scripts` compares the steps of `assets.yml` with the list), the npm platform package, and the npm package itself
+  and 8.5; `make test-scripts` compares the PHP matrix of `assets.yml` with the list), the npm platform package, and the npm package itself
   with the WASM module. The Go module `packages/go` is not in `goModules`: `make release-go-module` makes the commit
   that adds the generated files and the static libraries to the tree of the tag, proves it with a consumer and tags it
   `packages/go/vX.Y.Z` (binding GN-19f), because a Go module whose tag holds neither cannot be built by a consumer.

@@ -2,9 +2,11 @@
 
 ## Unreleased
 
-- T1.8-2 defines independent PHP platform/minor jobs and checks their ownership. Red: the current workflow has no
-  `php` job and builds both minors inside `platform`. Native asset proof remains pending the published binding
-  expected-minor recipe and its execution.
+- PHP extension assets have independent platform/minor jobs, each with one native setup, an expected-minor build
+  argument and a distinct artifact. Non-PHP platform assets build once. The workflow owner passes five tests,
+  including mutations of missing and duplicate combinations, runners, setup/build ownership and artifact identity.
+  Red: the earlier workflow had no `php` job and built both minors inside `platform`. Native asset proof remains
+  pending the published binding expected-minor recipe and its execution (T1.8-1, T1.8-3).
 
 - The next release plan requires matching binding 0.0.7 generator and core dependencies and independently selectable
   PHP-minor asset jobs. The current release tree uses binding 0.0.5. The planned version is 0.0.4; dependency updates,

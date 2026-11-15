@@ -126,6 +126,9 @@ function assetFindings(text: string, minors: readonly string[]): string[] {
   ] as const) {
     if (!body) { found.push(`missing job ${name}`); continue; }
     if (valueOf(body.split('\n').find(line => /^ {4}runs-on:/.test(line)) ?? '', 'runs-on') !== '${{ matrix.runner }}') found.push(`${name}: wrong runner selection`);
+    const matrix = /^ {6}matrix:\n([\s\S]*?)(?=^ {4}\S)/m.exec(body)?.[1] ?? '';
+    const keys = matrix.split('\n').filter(line => /^ {8}\S/.test(line));
+    if (JSON.stringify(keys) !== JSON.stringify(['        include:'])) found.push(`${name}: matrix must contain only explicit include entries`);
     if (JSON.stringify(canonical(entriesOf(body))) !== JSON.stringify(canonical(expected))) found.push(`${name}: matrix differs from required combinations`);
   }
   for (const name of [...text.matchAll(/^ {2}([a-z][a-z0-9_-]*):$/gm)].map(match => match[1] as string)) {
@@ -133,8 +136,15 @@ function assetFindings(text: string, minors: readonly string[]): string[] {
   }
   const steps = (body: string): string[] => body.split(/(?=^ {6}- )/m).slice(1);
   const runs = (body: string): string[] => steps(body).flatMap(step => [...step.matchAll(/^ {8}run: (.*)$/gm)].map(match => match[1] as string));
-  const setups = (body: string): string[] => steps(body).filter(step => /uses: shivammathur\/setup-php@/.test(step));
-  const artifacts = (body: string): string[] => steps(body).filter(step => /uses: actions\/upload-artifact@/.test(step)).flatMap(step => [...step.matchAll(/^ {10}name: (.*)$/gm)].map(match => match[1] as string));
+  const isSetup = (step: string): boolean => /^(?: {6}- | {8})uses: shivammathur\/setup-php@/m.test(step);
+  const setups = (body: string): string[] => steps(body).filter(isSetup);
+  const artifacts = (body: string): string[] => steps(body).filter(step => /^(?: {6}- | {8})uses: actions\/upload-artifact@/m.test(step)).flatMap(step => [...step.matchAll(/^ {10}name: (.*)$/gm)].map(match => match[1] as string));
+  for (const match of (text.split(/^jobs:\n/m)[1] ?? '').matchAll(/^ {2}([a-z][a-z0-9_-]*):$/gm)) {
+    const name = match[1] as string;
+    const body = jobOf(text, name);
+    if (name !== 'php' && (setups(body).length > 0 || runs(body).some(run => run.startsWith('make release-php-ext')))) found.push(`${name}: PHP belongs to its own job`);
+    if (name !== 'platform' && runs(body).some(run => /^make release-(?:go-static|wheel|npm-platform)( |$)/.test(run))) found.push(`${name}: non-PHP platform assets belong to platform`);
+  }
   const platformRuns = runs(platform);
   for (const target of ['release-go-static', 'release-wheel', 'release-npm-platform']) {
     if (platformRuns.filter(run => run === `make ${target}`).length !== 1) found.push(`platform: ${target} must run once`);
@@ -145,7 +155,8 @@ function assetFindings(text: string, minors: readonly string[]): string[] {
   if (phpSetups.length !== 1 || !/^ {10}php-version: \$\{\{ matrix.php \}\}$/m.test(phpSetups[0] ?? '') || /php-version-file:/.test(phpSetups[0] ?? '')) found.push('php: select one matrix runtime');
   const builds = runs(php).filter(run => run.startsWith('make release-php-ext'));
   if (builds.length !== 1 || builds[0] !== 'make release-php-ext PHP=php EXPECTED_PHP_MINOR=${{ matrix.php }}') found.push('php: build once with the expected minor');
-  if (php.indexOf('uses: shivammathur/setup-php@') > php.indexOf('run: make release-php-ext')) found.push('php: setup must precede the build');
+  const phpSteps = steps(php);
+  if (phpSteps.findIndex(isSetup) > phpSteps.findIndex(step => /^ {8}run: make release-php-ext( |$)/m.test(step))) found.push('php: setup must precede the build');
   if (JSON.stringify(artifacts(platform)) !== JSON.stringify(['assets-${{ matrix.platform }}'])) found.push('platform: wrong artifact identity');
   if (JSON.stringify(artifacts(php)) !== JSON.stringify(['assets-php-${{ matrix.platform }}-${{ matrix.php }}'])) found.push('php: wrong artifact identity');
   return found;
@@ -167,6 +178,9 @@ test('T1.8-2: asset ownership rejects missing, duplicate and misidentified jobs'
   const php = jobOf(text, 'php');
   const entry = "          - platform: darwin-arm64\n            runner: macos-15\n            php: '8.5'\n";
   const mutations: [string, string, string][] = [
+    ['      matrix:\n', "      matrix:\n        php: ['8.4', '8.5']\n", 'only explicit include'],
+    ['      matrix:\n', '      matrix:\n        exclude: []\n', 'only explicit include'],
+    ['      matrix:\n', '      matrix: {exclude: []}\n', 'only explicit include'],
     [entry, '', 'matrix differs'],
     [entry, entry + entry, 'matrix differs'],
     [entry, entry.replace('macos-15', 'ubuntu-26.04'), 'matrix differs'],
@@ -188,9 +202,15 @@ test('T1.8-2: asset ownership rejects missing, duplicate and misidentified jobs'
   assert.ok(setup);
   assert.ok(assetFindings(text.replace(php, php.replace(setup, setup + setup)), minors).some(finding => finding.includes('select one matrix runtime')));
   assert.ok(assetFindings(text.replace(php, php.replace(setup, '') + setup), minors).some(finding => finding.includes('setup must precede')));
+  const misplacedVersion = php.replace('          php-version: ${{ matrix.php }}\n', '').replace(build, build + '          php-version: ${{ matrix.php }}\n');
+  assert.ok(assetFindings(text.replace(php, misplacedVersion), minors).some(finding => finding.includes('select one matrix runtime')));
   assert.ok(assetFindings(text.replace('  npm:\n    runs-on: ubuntu-26.04-arm', '  npm:\n    runs-on: ${{ matrix.runner }}'), minors).some(finding => finding.includes('unexpected platform runner')));
   const wheel = '        run: make release-wheel';
   assert.ok(assetFindings(text.replace(wheel, wheel + '\n      - name: duplicated wheel\n' + wheel), minors).some(finding => finding.includes('release-wheel must run once')));
+  for (const target of ['release-wheel', 'release-php-ext']) {
+    const extra = text + `\n  duplicate:\n    runs-on: ubuntu-26.04-arm\n    steps:\n      - name: duplicate asset\n        run: make ${target}\n`;
+    assert.ok(assetFindings(extra, minors).some(finding => finding.startsWith('duplicate:')), `an extra job must not repeat ${target}`);
+  }
 });
 
 test('release.yml uploads the assets of each platform to the draft release before it makes the release public', () => {
