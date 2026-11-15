@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.0.6
+
+- binding 0.0.10 (T1.11): `polyspec-binding-core` of every Cargo manifest names `tag = "v0.0.10"`, `Cargo.lock` pins
+  the commit of that tag with no other `polyspec-binding-core`, and `package.json` names the release asset of
+  `@polyspec/binding` 0.0.10, whose integrity `package-lock.json` pins, so that a repository on binding 0.0.10 that
+  depends on this core pins one `polyspec-binding-core` (CK-20).
+
 ## 0.0.5
 
 - binding 0.0.9 and kit 0.0.114 (T1.10): `polyspec-binding-core` of every Cargo manifest names `tag = "v0.0.9"`,

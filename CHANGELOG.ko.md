@@ -1,7 +1,14 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 88b7f2d0b4064ac97ab8bc05848b837d78c26e07e7053d57e2a1d4118e252199 -->
+<!-- source-sha256: 43e96ecc57f5c7379ef01456045f1f6544328d8c8c59794c055a8f595a257da6 -->
 
 ## Unreleased
+
+## 0.0.6
+
+- binding 0.0.10(T1.11). 모든 Cargo manifest의 `polyspec-binding-core`가 `tag = "v0.0.10"`을 적고, `Cargo.lock`은 다른
+  `polyspec-binding-core` 없이 그 tag의 commit을 고정하며, `package.json`은 `@polyspec/binding` 0.0.10의 release asset을
+  적고 `package-lock.json`이 그 integrity를 고정한다. 그러면 binding 0.0.10을 쓰고 이 코어에 의존하는 저장소가
+  `polyspec-binding-core` 하나를 고정한다(CK-20).
 
 ## 0.0.5
 
