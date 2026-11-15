@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.0.5
+
 - binding 0.0.9 and kit 0.0.114 (T1.10): `polyspec-binding-core` of every Cargo manifest names `tag = "v0.0.9"`,
   `Cargo.lock` pins the commit of that tag with no other `polyspec-binding-core`, and `package.json` names the release
   assets of `@polyspec/binding` 0.0.9 and `@polyspec/kit` 0.0.114, whose integrity `package-lock.json` pins. A

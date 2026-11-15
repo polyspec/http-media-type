@@ -1,7 +1,9 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c8d04e40006b3a2fb550ec446656645c222863b9fe32fccf6b4d91eaf05b72f1 -->
+<!-- source-sha256: 88b7f2d0b4064ac97ab8bc05848b837d78c26e07e7053d57e2a1d4118e252199 -->
 
 ## Unreleased
+
+## 0.0.5
 
 - binding 0.0.9와 kit 0.0.114(T1.10). 모든 Cargo manifest의 `polyspec-binding-core`가 `tag = "v0.0.9"`를 적고,
   `Cargo.lock`은 다른 `polyspec-binding-core` 없이 그 tag의 commit을 고정하며, `package.json`은 `@polyspec/binding`
