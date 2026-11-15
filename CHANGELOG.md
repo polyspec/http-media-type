@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- The jobs of `release.yml` are one recipe each too (T1.9): `make ci-tag` and `make ci-release`, which read the
+  token, the id of the CI run, the actor and the tag from the `env:` of the job. `ci-tag` gives release-tag a file of its
+  own for `GITHUB_ENV` and reads TAG and VERSION from it in the same step. The job `release` downloads the assets of
+  each platform into `var/release/platform-assets` before its run step, and `ci-release` adds them to
+  `var/release/assets` after it created the draft release, so the order of publish, assets and undraft stays.
+
 - Every job of `ci.yml` and `assets.yml` is one recipe of the Makefile (T1.9): its one run step is `make ci-check
   NAME=<name>`, `make ci-platform`, `make ci-php EXPECTED_PHP_MINOR=<minor>` or `make ci-npm`, with `RELEASE`, the input
   of the called workflow, and the job `ci-passed` runs `make ci-passed RESULTS='<json of needs>'`. Before, a job held

@@ -124,7 +124,10 @@ rules of this repository.
   job whose content is in YAML steps, step conditions and expressions runs only on the runner of GitHub, so a local
   run could not be the run of CI; with the content in the recipe, `make ci-<job> NAME=value` is the same call locally
   and in CI. The judgement job `ci-passed` reads the results of the other jobs and exists only in CI: its one run step
-  is `make ci-passed RESULTS='${{ toJSON(needs) }}'`, the only other expression. `release.yml` is not under this rule.
+  is `make ci-passed RESULTS='${{ toJSON(needs) }}'`, the only other expression. The jobs `tag` and `release` of `release.yml` follow
+  the rule too, as `make ci-tag` and `make ci-release`; they take the values of their run, such as the token, the id
+  of the CI run, the actor and the outputs of `needs`, through the `env:` of the job, so that their run line stays
+  `make ci-<job>`, and the job `release` downloads the assets of each platform before its run step.
   `make test-scripts` checks it (`tests/scripts/workflows.test.mts`).
 - `assets.yml` keeps the non-PHP builds in `platform` once per platform and gives `php` the complete
   platform by `phpExtension.minors` matrix. Each PHP entry has one setup of `matrix.php`, one

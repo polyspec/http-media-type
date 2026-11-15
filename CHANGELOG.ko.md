@@ -1,7 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d627b040be216a1b48916fcd63f38deede733462bf0f3b036f58ebdca7491205 -->
+<!-- source-sha256: 9f1a9c47c646c7f3c327218bcf01330db9b76eaf6e74006e9d1d756428a23908 -->
 
 ## Unreleased
+
+- `release.yml`의 job도 각각 recipe 하나다(T1.9). `make ci-tag`와 `make ci-release`는 token, CI 실행의 id, actor,
+  tag를 job의 `env:`에서 읽는다. `ci-tag`는 release-tag에 `GITHUB_ENV`용 자기 파일을 주고 같은 step에서 그 파일의 TAG와
+  VERSION을 읽는다. job `release`는 run step 앞에서 각 플랫폼의 asset을 `var/release/platform-assets`로 내려받고,
+  `ci-release`가 draft release를 만든 뒤 그것을 `var/release/assets`에 더하므로 publish, asset, undraft의 순서가 유지된다.
 
 - `ci.yml`과 `assets.yml`의 job은 각각 Makefile의 recipe 하나다(T1.9). job의 run step 하나는 `make ci-check
   NAME=<name>`, `make ci-platform`, `make ci-php EXPECTED_PHP_MINOR=<minor>`, `make ci-npm` 중 하나이고, 호출된 workflow의

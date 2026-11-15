@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: ed6c47f44634496b545f3bc163cc7cc5937beedb60f388708f53e8366098afe1 -->
+<!-- source-sha256: d1dd30b79940d8a5fbf7672b3d5b2ff74ee153149047fa8c9a358b1fc18b310f -->
 # 개발
 
 모든 polyspec 저장소의 작업 원칙은 polyspec의 `PRINCIPLES.md`에 있다. 이 파일은 이 저장소의 규칙만
@@ -119,7 +119,9 @@
   step 조건, expression에 있는 job은 GitHub runner에서만 돌므로 local 실행이 CI의 실행과 같을 수 없었다. 내용이 recipe에
   있으면 `make ci-<job> NAME=value`가 local과 CI에서 같은 호출이다. 판정 job `ci-passed`는 다른 job의 결과를 읽으므로 CI에만
   있다. 그 run step 하나는 `make ci-passed RESULTS='${{ toJSON(needs) }}'`이고, 이것이 허용되는 유일한 다른 expression이다.
-  `release.yml`은 이 규칙의 대상이 아니다. `make test-scripts`가 이 규칙을 검사한다(`tests/scripts/workflows.test.mts`).
+  `release.yml`의 job `tag`와 `release`도 이 규칙을 따르며 `make ci-tag`와
+  `make ci-release`다. token, CI 실행의 id, actor, `needs`의 output 같은 실행의 값은 job의 `env:`로 받아 run 줄이
+  `make ci-<job>`으로 남고, job `release`는 run step 앞에서 각 플랫폼의 asset을 내려받는다. `make test-scripts`가 이 규칙을 검사한다(`tests/scripts/workflows.test.mts`).
 - `assets.yml`은 PHP 이외의 build를 platform마다 한 번씩 `platform`에 두고 `php`에 platform과
   `phpExtension.minors`의 모든 조합을 둔다. 각 PHP 항목은 `matrix.php`의 setup 하나,
   `make ci-php EXPECTED_PHP_MINOR=${{ matrix.php }}` 하나, 서로 다른 artifact

@@ -285,6 +285,37 @@ ci-npm:
 	$(if $(filter true,$(RELEASE)),$(MAKE) --no-print-directory release-binding-check)
 	$(MAKE) --no-print-directory release-npm
 
+# The jobs of release.yml, each one recipe like the jobs of CI, which read the values of the run from the env of the job.
+# ci-tag tags the commit of the CI run RUN; when the release starts by itself (EVENT workflow_run) it tags only the
+# version commit (AUTO). release-tag
+# writes TAG and VERSION into the file that GITHUB_ENV names; the recipe gives it a file of its own, reads TAG and VERSION
+# from it in the same step and gives them to the later jobs (release-tag-output). Both are empty when the run releases
+# nothing.
+.PHONY: ci-tag ci-release
+ci-tag:
+	@test -n "$(RUN)" || { echo 'ci-tag: RUN is required, for example make ci-tag RUN=123' >&2; exit 2; }
+	mkdir -p var/release && : > var/release/tag.env
+	GITHUB_ENV=$(CURDIR)/var/release/tag.env $(MAKE) --no-print-directory release-tag RUN=$(RUN)$(if $(filter workflow_run,$(EVENT)), AUTO=1)
+	set -a && . var/release/tag.env && set +a && $(MAKE) --no-print-directory release-tag-output
+
+# ci-release releases TAG: it builds the archives and creates the draft release, then adds the assets of each platform,
+# which the job downloaded into var/release/platform-assets before the recipe runs, carries the Go module with the
+# identity of ACTOR, the actor of the run, uploads the assets of each platform and makes the release public. The tools
+# of var/tools are on the PATH of every recipe, so the release needs no step that puts them there.
+ci-release:
+	@test -n "$(TAG)" || { echo 'ci-release: TAG is required, for example make ci-release TAG=v0.0.1 VERSION=0.0.1 ACTOR=<login>' >&2; exit 2; }
+	$(MAKE) --no-print-directory release-prepare
+	$(MAKE) --no-print-directory release-tools
+	$(MAKE) --no-print-directory release-assets
+	$(MAKE) --no-print-directory release-publish
+	mkdir -p var/release/assets && cp -R var/release/platform-assets/. var/release/assets/
+	$(MAKE) --no-print-directory install-tools TOOLS="rust go"
+	$(MAKE) --no-print-directory install-binding
+	$(MAKE) --no-print-directory release-recipes
+	GIT_AUTHOR_NAME=$(ACTOR) GIT_AUTHOR_EMAIL=$(ACTOR)@users.noreply.github.com GIT_COMMITTER_NAME=$(ACTOR) GIT_COMMITTER_EMAIL=$(ACTOR)@users.noreply.github.com $(MAKE) --no-print-directory release-go-module
+	$(MAKE) --no-print-directory release-platform-assets
+	$(MAKE) --no-print-directory release-undraft
+
 # ---- Release recipes of the bindings (binding GN-19h) --------------------------------------------------------------------
 # binding release-recipes writes the recipes that build the assets of each platform (the Go static library, the abi3 wheel,
 # the PHP extension, the npm package with its platform packages) and that carry the Go module and upload the assets into
