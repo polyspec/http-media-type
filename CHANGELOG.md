@@ -6,7 +6,8 @@
   argument and a distinct artifact. Non-PHP platform assets build once. The workflow owner passes five tests,
   including mutations of missing and duplicate combinations, runners, setup/build ownership and artifact identity.
   Red: the earlier workflow had no `php` job and built both minors inside `platform`. Native asset proof remains
-  pending the published binding expected-minor recipe and its execution (T1.8-1, T1.8-3).
+  pending the published binding expected-minor recipe and its execution (T1.8-1, T1.8-3). The declared workflow
+  verification also passed all five tests on the committed implementation; T1.8-2 records that source-level proof.
 
 - The next release plan requires matching binding 0.0.7 generator and core dependencies and independently selectable
   PHP-minor asset jobs. The current release tree uses binding 0.0.5. The planned version is 0.0.4; dependency updates,

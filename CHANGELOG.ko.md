@@ -1,5 +1,5 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 11b3e8cccc09fa5f29697c42b58bc1115967faa1e507bf9eaf8d7fc90890c79e -->
+<!-- source-sha256: e5a483b72b621b9a9c0534961e26698d658e074be151599693c2bc6e3e85fe3a -->
 
 ## Unreleased
 
@@ -7,7 +7,8 @@
   서로 다른 artifact가 있다. PHP 이외의 platform asset은 한 번씩 빌드한다. workflow owner는 조합 누락·중복,
   runner, setup/build 소유 관계, artifact 식별자를 바꾸는 mutation을 포함해 test 다섯 개를 통과한다. Red: 이전
   workflow에는 `php` job이 없고 `platform` 안에서 두 minor를 빌드했다. native asset 검증은 binding의 expected-minor
-  recipe 공개와 그 실행을 기다린다(T1.8-1, T1.8-3).
+  recipe 공개와 그 실행을 기다린다(T1.8-1, T1.8-3). 선언한 workflow 검증도 commit된 구현에서 test 다섯 개를 모두
+  통과했다. T1.8-2는 이 source 수준의 검증을 기록한다.
 
 - 다음 release plan은 서로 일치하는 binding 0.0.7 generator와 core 의존성, PHP minor별로 독립 선택하는 asset job을
   요구한다. 현재 release tree는 binding 0.0.5를 쓴다. 계획한 버전은 0.0.4이며 의존성 갱신, 생성된 target 검증,
