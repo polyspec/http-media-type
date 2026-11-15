@@ -1,7 +1,15 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: caf0fd06222de74a7bd84313630922b141e0c77b3097b5a3f42baa370747b94c -->
+<!-- source-sha256: a15727570c56a2075b0d42ec1a4001096fb07076b1a8aa29632665e7b3420195 -->
 
 ## Unreleased
+
+- 과거 0.0.3 release: T1.7은 완료다. [release workflow](https://github.com/polyspec/http-media-type/actions/runs/43638003353)가
+  성공했고 [v0.0.3](https://github.com/polyspec/http-media-type/releases/tag/v0.0.3)은 asset 15개를 올린 공개 release다.
+  wheel 세 개, npm package 네 개, PHP minor/platform binary 여섯 개, Composer archive와 packages.json이다.
+  Go module tag는 생성 파일과 native library 다섯 개를 담고 있으며 release consumer test가 통과했다. 보존한 native
+  검증 기록은 Mac의 Python, Node CJS/ESM, PHP 8.4.27/8.5.10, Go 호출을 포함한다. 이번 감사는 원래 raw Mac 로그를
+  찾지 못했으며 다시 실행하지 않았다. T1.7의 하위 항목은 모두 완료다. 이는 과거 release의 완료 기록이며 계획한
+  0.0.4의 graph, native, 전체 CI 검증은 여전히 필요하다.
 
 - 과거 0.0.3 검증: T1.7-3은 완료다. [release tag의 CI 실행](https://github.com/polyspec/http-media-type/actions/runs/43637603260)과
   그 [core job](https://github.com/polyspec/http-media-type/actions/runs/43637603260/job/132577751340)이 `docs-check`와

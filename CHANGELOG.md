@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Historical 0.0.3 release: T1.7 is complete. The [release workflow](https://github.com/polyspec/http-media-type/actions/runs/43638003353)
+  succeeded and [v0.0.3](https://github.com/polyspec/http-media-type/releases/tag/v0.0.3) is public with 15 uploaded assets:
+  three wheels, four npm packages, six PHP-minor/platform binaries, the Composer archive and packages.json.
+  The Go module tag contains generated files and five native libraries; the release consumer test passed.
+  The retained native verification record covers Mac Python, Node CJS/ESM, PHP 8.4.27/8.5.10 and Go calls. This audit
+  did not find their original raw Mac logs and did not rerun them. All T1.7 sub-items are complete. This is historical
+  release closure; the planned 0.0.4 still needs its graph, native and complete CI proof.
+
 - Historical 0.0.3 verification: T1.7-3 is complete. The [release-tag CI run](https://github.com/polyspec/http-media-type/actions/runs/43637603260)
   and its [core job](https://github.com/polyspec/http-media-type/actions/runs/43637603260/job/132577751340) passed both
   `docs-check` and `release-coverage`, with all seven targets complete. The logged tree matches the immutable
