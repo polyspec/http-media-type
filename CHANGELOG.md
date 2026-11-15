@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- The historical binding 0.0.2 pin task T1.3 is withdrawn: the published 0.0.2 release pins binding 0.0.4
+  (T1.4-1), and the published 0.0.3 release pins binding 0.0.5 (T1.7-1). No work to restore the older pin is needed.
+  This records supersession, without claiming a newly run verification of that old pin. T1.4 stays withdrawn and
+  the planned 0.0.4 graph/native and final CI tasks remain waiting.
+
 - Historical 0.0.3 release: T1.7 is complete. The [release workflow](https://github.com/polyspec/http-media-type/actions/runs/43638003353)
   succeeded and [v0.0.3](https://github.com/polyspec/http-media-type/releases/tag/v0.0.3) is public with 15 uploaded assets:
   three wheels, four npm packages, six PHP-minor/platform binaries, the Composer archive and packages.json.
