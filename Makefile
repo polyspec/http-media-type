@@ -125,11 +125,11 @@ documents-stamp:
 
 # The contract check and the comparison of the tracked binding packages with what binding writes (L-2 (c)).
 bindings-check:
-	$(BINDING) check packages/rust/interface.json
+	$(BINDING) check packages/rust/interface.json --cargo "$(CARGO)"
 
 # Writes the generated sources into packages/{php-ext,python,ts}/generated, which are not tracked (G-6, L-1).
 bindings:
-	$(BINDING) generate --root .
+	$(BINDING) generate --root . --cargo "$(CARGO)"
 
 test-bindings: lint-bindings check-declarations test-python test-node test-wasm test-php test-go
 

@@ -1079,8 +1079,8 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 
 [[package]]
 name = "polyspec-binding-core"
-version = "0.0.10"
-source = "git+https://github.com/polyspec/binding.git?tag=v0.0.10#e38c4a2b3c7ceb322e6d573c278920f27e7f0ba2"
+version = "0.0.17"
+source = "git+https://github.com/polyspec/binding.git?tag=v0.0.17#8db1add67c520673e07cfaf75038252ede40f282"
 dependencies = [
  "indexmap",
  "libc",
@@ -1090,7 +1090,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-media-type"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "polyspec-binding-core",
  "proptest",
@@ -1099,7 +1099,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-media-type-go"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-http-media-type",
@@ -1107,7 +1107,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-media-type-node"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "napi",
  "napi-build",
@@ -1118,7 +1118,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-media-type-php-ext"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "ext-php-rs",
  "polyspec-binding-core",
@@ -1127,7 +1127,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-media-type-python"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-http-media-type",
@@ -1136,7 +1136,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-media-type-wasm"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "js-sys",
  "polyspec-binding-core",

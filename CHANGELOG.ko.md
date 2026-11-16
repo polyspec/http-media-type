@@ -1,7 +1,16 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 43e96ecc57f5c7379ef01456045f1f6544328d8c8c59794c055a8f595a257da6 -->
+<!-- source-sha256: 34714a8e65cdecc7b3353dba6d9d6b13e470d9f3d77e39d1c104d427b9355285 -->
 
 ## Unreleased
+
+## 0.0.7
+
+- binding 0.0.17과 kit 0.0.118(T1.12): 모든 Cargo manifest의 `polyspec-binding-core`가 `tag = "v0.0.17"`을 적고,
+  `Cargo.lock`은 다른 `polyspec-binding-core` 없이 그 tag의 commit을 고정하며, `package.json`은 `@polyspec/binding`
+  0.0.17과 `@polyspec/kit` 0.0.118의 release asset을 적고 `package-lock.json`이 그 integrity를 고정한다. 그러면
+  binding 0.0.17을 쓰고 이 코어에 의존하는 저장소가 `polyspec-binding-core` 하나를 고정한다(CK-20). binding check와
+  generate는 `--cargo`를 받는다(GN-1d). `packages/rust/interface.json`의 각 case row는 결과 key와 코어 시험이 읽는
+  key `rules`를 적고, `contracts/media-type.json`의 case는 설명을 `label` 대신 G-5의 key `note`에 둔다(CK-96).
 
 ## 0.0.6
 

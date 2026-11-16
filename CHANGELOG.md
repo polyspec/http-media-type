@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.0.7
+
+- binding 0.0.17 and kit 0.0.118 (T1.12): `polyspec-binding-core` of every Cargo manifest names `tag = "v0.0.17"`,
+  `Cargo.lock` pins the commit of that tag with no other `polyspec-binding-core`, and `package.json` names the release
+  assets of `@polyspec/binding` 0.0.17 and `@polyspec/kit` 0.0.118, whose integrity `package-lock.json` pins, so that a
+  repository on binding 0.0.17 that depends on this core pins one `polyspec-binding-core` (CK-20). binding check and
+  generate take `--cargo` (GN-1d). Each case row of `packages/rust/interface.json` names its result key and the key
+  `rules` that the core tests read, and the cases of `contracts/media-type.json` give their description under `note`,
+  the key of G-5, instead of `label` (CK-96).
+
 ## 0.0.6
 
 - binding 0.0.10 (T1.11): `polyspec-binding-core` of every Cargo manifest names `tag = "v0.0.10"`, `Cargo.lock` pins

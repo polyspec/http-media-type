@@ -11,7 +11,7 @@ import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 
 const root = resolve(import.meta.dirname, '../..');
-const VERSION = '0.0.10';
+const VERSION = '0.0.17';
 const ASSET = `https://github.com/polyspec/binding/releases/download/v${VERSION}/polyspec-binding-${VERSION}.tgz`;
 const read = (file: string): string => readFileSync(join(root, file), 'utf8');
 const dryRun = (...goals: string[]): string[] =>
@@ -52,7 +52,7 @@ test('package.json names the release asset of the tool and package-lock.json pin
 
 test('the recipes run the installed tool, and make install-binding fetches the crates of Cargo.lock', () => {
   const check = dryRun('bindings-check');
-  assert.ok(check.some((line) => line.endsWith('node_modules/@polyspec/binding/dist/cli.js check packages/rust/interface.json')), check.join('\n'));
+  assert.ok(check.some((line) => line.endsWith('node_modules/@polyspec/binding/dist/cli.js check packages/rust/interface.json --cargo "cargo"')), check.join('\n'));
   const install = dryRun('install-binding');
   assert.ok(install.some((line) => / fetch --locked( |$)/.test(line)), install.join('\n'));
 });
