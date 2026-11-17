@@ -7,6 +7,8 @@
   `codec-test` of the Go crate is linted.
 - The jobs of `assets.yml` install go before the check of binding and run `bindings-check` when they do not release
   (T1.16), so that CI runs on each runner of the release what the release runs.
+- kit is pinned at its release 0.0.120, and `make release-candidate-assets` builds the archives of the release from the
+  committed HEAD with no tag; the job check of CI runs it (T1.17).
 
 ## 0.0.8
 

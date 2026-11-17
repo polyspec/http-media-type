@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-rust-core -->
-<!-- source-sha256: c63058be39188294010c90bcd0ad304c916dda2686239bb123f3e7cdea3054f7 -->
+<!-- source-sha256: 93ea846bd04a213ddbf19d3c1c8b52e7685c46cd76bbfb07722b083cd99e4130 -->
 # Rust 코어 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -31,3 +31,4 @@
 | T1.14 | 0.0.8을 내어 `make test-go`가 생성 Go 시험을 빌드하고 돌리게 한다. `go test`에 Go crate의 각 feature의 build tag `polyspec_http_media_type_<feature>`를 주고, recipe의 dry run으로 시험한다(`tests/scripts/recipes.test.mts`, 0.0.7의 tag에서 실패한다). 버전 커밋 `chore(release): Release 0.0.8 (#T1.14)`를 만든다 | `Makefile`, `tests/scripts/`, `packages/*/Cargo.toml`, `Cargo.lock`, `CHANGELOG.md` | `make check test-bindings`. `make test-go` 로그가 `TestB7APanicIsKindInternal`과 `TestB8Latin1RoundTrips`를 통과로 댄다 | [o] |
 | T1.15 | 각 binding crate의 test feature를 Makefile의 목록 대신 그 manifest의 `[features]` 표에서 읽고, `go test`의 build tag도 같은 목록에서 만든다. `make lint-bindings`는 그 합집합으로 workspace를 lint한다. 전에는 `panic-test`만 주어 Go crate의 feature `codec-test`의 코드가 lint되지 않았다. `tests/scripts/recipes.test.mts`는 각 recipe가 돌 것을 manifest와 대조하고, feature를 직접 적은 recipe나 변수에서 실패한다 | `Makefile`, `tests/scripts/recipes.test.mts`, `CHANGELOG.md` | `make test-scripts`, `make test-bindings` | [~] |
 | T1.16 | `assets.yml`의 각 job이 release하지 않을 때에도 binding의 검사를 돈다. `ci-platform`, `ci-php`, `ci-npm`이 go를 설치한다. binding check는 packages/go의 go.sum을 go로 읽는다(binding CK-19. go가 없는 job은 http-negotiation의 release 0.0.4처럼 `spawnSync go ENOENT`로 실패한다). 각 job은 `RELEASE=true`가 없으면 `bindings-check`를 돌아, release가 도는 것을 CI가 release의 각 runner에서 돈다. `tests/scripts/workflows.test.mts`는 검사 앞에서 go를 설치하지 않거나 `RELEASE=true` 없이 검사를 돌지 않는 job에서 실패한다 | `Makefile`, `tests/scripts/workflows.test.mts`, `CHANGELOG.md` | `make test-scripts` | [~] |
+| T1.17 | kit 0.0.120을 고정하고, CI의 job check가 tag 없이 커밋된 HEAD에서 release의 archive를 만든다. `make release-candidate-assets`는 kit의 `release.mjs candidate-assets`를 돌려 `var/release-candidate/assets`에 쓴다. kit이 HEAD의 `CHANGELOG.md` 첫 절에서 version을 읽는다(kit K1286). `ci-check`의 항목 core가 그것을 돈다. release는 archive를 만들기 전에 tag를 만들므로, 그 단계의 실패가 전에는 tag 뒤에야 드러났다 | `package.json`, `package-lock.json`, `Makefile`, `tests/scripts/recipes.test.mts`, `CHANGELOG.md` | `make test-scripts`, `make release-candidate-assets` | [~] |

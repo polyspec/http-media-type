@@ -252,7 +252,7 @@ ci-passed:
 # PHPUnit of composer.lock.
 CI_CHECK_NAMES := core bindings
 CI_CHECK_INSTALLS_core := install-tools install-binding
-CI_CHECK_TARGETS_core := lint-rust fmt-check test bindings-check docs-check test-scripts release-coverage
+CI_CHECK_TARGETS_core := lint-rust fmt-check test bindings-check docs-check test-scripts release-coverage release-candidate-assets
 CI_CHECK_INSTALLS_bindings := install-tools install-binding install-php-tools
 CI_CHECK_TARGETS_bindings := lint-bindings check-declarations test-python test-node test-wasm test-php test-go
 
@@ -398,6 +398,14 @@ release-tools-path:
 release-assets:
 	@test -n "$$TAG" || { echo "release-assets: TAG is required, for example make release-assets TAG=v0.0.1"; exit 1; }
 	RELEASE_ASSETS=var/release/assets $(ONLINE) $(NODE) $(KIT)/release.mjs assets "$$TAG"
+
+# release-candidate-assets runs the archive steps of release-assets on the committed HEAD with no tag: the release
+# creates and pushes the tag before it builds the archives, so without this target a failure of those steps first shows
+# after the tag. kit refuses a checkout with a changed or an untracked path, and packs the version that the release
+# would take, the first section `## X.Y.Z` of the CHANGELOG.md of HEAD (kit K1286).
+.PHONY: release-candidate-assets
+release-candidate-assets:
+	RELEASE_ASSETS=var/release-candidate/assets $(ONLINE) $(NODE) $(KIT)/release.mjs candidate-assets
 
 release-publish:
 	@test -n "$$TAG" || { echo "release-publish: TAG is required, for example make release-publish TAG=v0.0.1"; exit 1; }

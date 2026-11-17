@@ -78,3 +78,15 @@ test('no recipe of the Makefile names a feature itself', () => {
   const literal = readFileSync(resolve(root, 'Makefile'), 'utf8').split('\n').filter((line) => /--features (?!\$\()/.test(line) || /^[A-Z_]*FEATURES :?= *[a-z]/.test(line));
   assert.deepEqual(literal, [], 'a recipe or a variable of the Makefile names features itself');
 });
+
+// The release creates and pushes the tag before it builds the archives, so the job check of CI builds them from the
+// commit with no tag (make release-candidate-assets); kit reads the version from the change log of HEAD (kit K1286), so
+// the recipe names none.
+test('the job check of CI builds the archives of the release from the commit with no tag', () => {
+  const makefile = readFileSync(resolve(root, 'Makefile'), 'utf8');
+  const core = /^CI_CHECK_TARGETS_core := (.*)$/m.exec(makefile)?.[1]?.split(' ') ?? [];
+  assert.ok(core.includes('release-candidate-assets'), `the entry core of ci-check runs ${core.join(' ')}`);
+  const recipe = dryRun('release-candidate-assets');
+  assert.equal(recipe.length, 1, `make release-candidate-assets runs ${String(recipe.length)} lines`);
+  assert.match(recipe[0] ?? '', /^RELEASE_ASSETS=var\/release-candidate\/assets +\S+\/node \S+\/release\.mjs candidate-assets$/);
+});
