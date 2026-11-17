@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.0.9
+
 - The recipes read the test features of each binding crate from its manifest (T1.15), and the build tags of `go test`
   come from the same list. `make lint-bindings` lints the workspace with their union, so the code of the feature
   `codec-test` of the Go crate is linted.
