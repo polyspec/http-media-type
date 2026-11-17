@@ -12,3 +12,6 @@ __pycache__/
 # make release-npm-platform packs; both are generated.
 /packages/release.mk
 /packages/ts/npm/
+/.links
+/packages/go/go.work
+/packages/go/go.work.sum
