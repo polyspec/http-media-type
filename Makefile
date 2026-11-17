@@ -272,13 +272,15 @@ ci-check:
 	exit $$status
 
 # The jobs of assets.yml. RELEASE=true, which the workflow release passes, runs the release check of binding before a
-# job builds. Each recipe line stops the job at its failure; the builds of ci-platform are the goals of one make -k, which
+# job builds; without it the job runs the same check without the release rules (bindings-check), so that CI runs on
+# each runner of the release what the release runs. Each job installs go, which the check runs on a go.sum of
+# packages/go (binding CK-19). Each recipe line stops the job at its failure; the builds of ci-platform are the goals of one make -k, which
 # builds each to its end and fails after the last when one failed.
 ci-platform:
-	$(MAKE) --no-print-directory install-tools TOOLS="rust uv python"
+	$(MAKE) --no-print-directory install-tools TOOLS="rust uv python go"
 	$(MAKE) --no-print-directory install-binding
 	$(MAKE) --no-print-directory release-recipes
-	$(if $(filter true,$(RELEASE)),$(MAKE) --no-print-directory release-binding-check)
+	$(if $(filter true,$(RELEASE)),$(MAKE) --no-print-directory release-binding-check,$(MAKE) --no-print-directory bindings-check)
 	$(MAKE) --no-print-directory -k release-go-static release-wheel release-npm-platform
 
 # ci-php builds the extension for the PHP minor EXPECTED_PHP_MINOR with the php of PATH, which the job selects with
@@ -292,18 +294,18 @@ ci-php: DYLD_LIBRARY_PATH :=
 ci-php: LD_LIBRARY_PATH :=
 ci-php:
 	@test -n "$(EXPECTED_PHP_MINOR)" || { echo 'ci-php: EXPECTED_PHP_MINOR is required, for example make ci-php EXPECTED_PHP_MINOR=8.4' >&2; exit 2; }
-	$(MAKE) --no-print-directory install-tools TOOLS=rust
+	$(MAKE) --no-print-directory install-tools TOOLS="rust go"
 	$(MAKE) --no-print-directory install-binding
 	$(MAKE) --no-print-directory release-recipes
-	$(if $(filter true,$(RELEASE)),$(MAKE) --no-print-directory release-binding-check)
+	$(if $(filter true,$(RELEASE)),$(MAKE) --no-print-directory release-binding-check,$(MAKE) --no-print-directory bindings-check)
 	$(MAKE) --no-print-directory release-php-ext PHP=php EXPECTED_PHP_MINOR=$(EXPECTED_PHP_MINOR)
 
 ci-npm:
-	$(MAKE) --no-print-directory install-tools TOOLS=rust
+	$(MAKE) --no-print-directory install-tools TOOLS="rust go"
 	$(MAKE) --no-print-directory install-binding
 	$(MAKE) --no-print-directory release-recipes
 	$(MAKE) --no-print-directory install-wasm-bindgen
-	$(if $(filter true,$(RELEASE)),$(MAKE) --no-print-directory release-binding-check)
+	$(if $(filter true,$(RELEASE)),$(MAKE) --no-print-directory release-binding-check,$(MAKE) --no-print-directory bindings-check)
 	$(MAKE) --no-print-directory release-npm
 
 # The jobs of release.yml, each one recipe like the jobs of CI, which read the values of the run from the env of the job.

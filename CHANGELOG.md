@@ -5,6 +5,8 @@
 - The recipes read the test features of each binding crate from its manifest (T1.15), and the build tags of `go test`
   come from the same list. `make lint-bindings` lints the workspace with their union, so the code of the feature
   `codec-test` of the Go crate is linted.
+- The jobs of `assets.yml` install go before the check of binding and run `bindings-check` when they do not release
+  (T1.16), so that CI runs on each runner of the release what the release runs.
 
 ## 0.0.8
 

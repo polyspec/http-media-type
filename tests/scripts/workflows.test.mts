@@ -236,7 +236,8 @@ const makeCalls = (recipe: readonly string[]): string[] =>
     // A word that ends the call of a function of make, such as release-binding-check) of $(if ...), loses the parentheses
     // that it does not open.
     const unwrap = (word: string): string => (word.endsWith(')') && word.split('(').length < word.split(')').length ? unwrap(word.slice(0, -1)) : word);
-    const cleaned = words.map(unwrap).filter((word) => word !== '' && !word.startsWith('-'));
+    // The goal that ends the second argument of $(if ...) ends with its comma.
+    const cleaned = words.map(unwrap).map((word) => (word.endsWith(',') ? word.slice(0, -1) : word)).filter((word) => word !== '' && !word.startsWith('-'));
     const variables = cleaned.filter((word) => /^[A-Z][A-Z0-9_]*=/.test(word));
     return cleaned.filter((word) => !word.includes('=')).map((goal) => ['make', goal, ...variables].join(' '));
   }));
@@ -373,4 +374,25 @@ test('release.yml downloads the assets of each platform before ci-release, which
     .map((pattern) => recipe.findIndex((line) => pattern.test(line)));
   assert.ok(order.every((index) => index >= 0), recipe.join('\n'));
   assert.deepEqual([...order].sort((x, y) => x - y), order, recipe.join('\n'));
+});
+
+// binding check reads a go.sum of packages/go, which binding scaffold writes with go mod download (CK-19), so a job
+// that runs the release check installs go before it; without go the check fails with spawnSync go ENOENT. A job that
+// does not release runs the same check without the release rules, so that CI runs on the runners of the release what
+// the release runs.
+test('each job of assets.yml that runs release-binding-check installs go before it and runs bindings-check when it does not release', () => {
+  const text = read(ASSETS);
+  const makefile = read('Makefile');
+  const checked = jobNames(text).filter((name) => runsOf(jobOf(text, name), makefile).includes('make release-binding-check'));
+  assert.deepEqual(checked.sort(), ['npm', 'php', 'platform'], 'the jobs of assets.yml that run release-binding-check');
+  for (const name of checked) {
+    const runs = runsOf(jobOf(text, name), makefile);
+    const check = runs.indexOf('make release-binding-check');
+    const go = runs.findIndex((run) => /^make install-tools TOOLS=(?:"[^"]*\bgo\b[^"]*"|go)$/.test(run));
+    assert.ok(go >= 0 && go < check, `the job ${name} runs release-binding-check without installing go before it: ${runs.join('; ')}`);
+    assert.ok(runs.includes('make bindings-check'), `the job ${name} runs no bindings-check when it does not release: ${runs.join('; ')}`);
+  }
+  const recipes = makefile.split('\n').filter((line) => line.includes('release-binding-check') && line.startsWith('\t'));
+  for (const line of recipes)
+    assert.equal(line, '\t$(if $(filter true,$(RELEASE)),$(MAKE) --no-print-directory release-binding-check,$(MAKE) --no-print-directory bindings-check)', 'a recipe runs the release check only with RELEASE=true, and bindings-check otherwise');
 });
