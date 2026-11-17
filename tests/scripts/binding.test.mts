@@ -11,9 +11,13 @@ import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 
 const root = resolve(import.meta.dirname, '../..');
-const VERSION = '0.0.17';
-const ASSET = `https://github.com/polyspec/binding/releases/download/v${VERSION}/polyspec-binding-${VERSION}.tgz`;
 const read = (file: string): string => readFileSync(join(root, file), 'utf8');
+// The one source of the version of binding is the asset that package.json names: every other place must name that release.
+const ASSET_OF_RELEASE = /^https:\/\/github\.com\/polyspec\/binding\/releases\/download\/v(\d+\.\d+\.\d+)\/polyspec-binding-\1\.tgz$/;
+const declared = (JSON.parse(read('package.json')) as { devDependencies?: Record<string, string> }).devDependencies?.['@polyspec/binding'] ?? '';
+const VERSION = ASSET_OF_RELEASE.exec(declared)?.[1] ?? '';
+assert.ok(VERSION !== '', `package.json names no release asset of binding: ${declared}`);
+const ASSET = declared;
 const dryRun = (...goals: string[]): string[] =>
   execFileSync('make', ['--dry-run', '--no-print-directory', ...goals], {
     cwd: root,

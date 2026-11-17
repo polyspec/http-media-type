@@ -10,6 +10,7 @@
   release의 각 runner에서 돈다.
 - kit을 release 0.0.120에 고정하고, `make release-candidate-assets`는 tag 없이 커밋된 HEAD에서 release의 archive를
   만든다. CI의 job check가 그것을 돈다(T1.17).
+- 시험 `binding.test.mts`는 binding의 version을 `package.json`이 이름 붙인 release asset에서 읽고, 모든 Cargo manifest와 `Cargo.lock`이 그 release를 가리키는지 확인한다. 그래서 binding의 pin이 시험의 기대값을 바꾸지 않는다(T1.20).
 
 ## 0.0.8
 

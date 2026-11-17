@@ -11,6 +11,8 @@
   (T1.16), so that CI runs on each runner of the release what the release runs.
 - kit is pinned at its release 0.0.120, and `make release-candidate-assets` builds the archives of the release from the
   committed HEAD with no tag; the job check of CI runs it (T1.17).
+- The test of binding reads the version of binding from the release asset that `package.json` names, and checks that every
+  Cargo manifest and `Cargo.lock` name that release, so a pin of binding changes no expected value of the test (T1.20).
 
 ## 0.0.8
 
