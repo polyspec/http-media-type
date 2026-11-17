@@ -344,6 +344,7 @@ ci-release:
 	$(MAKE) --no-print-directory install-binding
 	$(MAKE) --no-print-directory release-recipes
 	GIT_AUTHOR_NAME=$(ACTOR) GIT_AUTHOR_EMAIL=$(ACTOR)@users.noreply.github.com GIT_COMMITTER_NAME=$(ACTOR) GIT_COMMITTER_EMAIL=$(ACTOR)@users.noreply.github.com $(MAKE) --no-print-directory release-go-module
+	GIT_AUTHOR_NAME=$(ACTOR) GIT_AUTHOR_EMAIL=$(ACTOR)@users.noreply.github.com GIT_COMMITTER_NAME=$(ACTOR) GIT_COMMITTER_EMAIL=$(ACTOR)@users.noreply.github.com $(MAKE) --no-print-directory release-go-module-push TAG=$(TAG)
 	$(MAKE) --no-print-directory release-platform-assets
 	$(MAKE) --no-print-directory release-undraft
 
