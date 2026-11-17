@@ -194,13 +194,17 @@ test-wasm: node-package
 	cd $(VAR)/node && HTTP_MEDIA_TYPE_CASES=$(CASES) $(NODE) --expose-gc --test generated.wasm.test.mjs cases.wasm.test.mjs
 
 # The static library with the test features (binding GN-13b), which Go links through CGO_LDFLAGS; gofmt and go vet,
-# then the generated tests and the contract cases of packages/go/tests on go test. GOTOOLCHAIN=local: a go of another
-# release than the go directive fails instead of fetching that release.
+# then the generated tests and the contract cases of packages/go/tests on go test, with the build tag
+# polyspec_http_media_type_<feature> of each feature of the Go crate, under which binding writes the generated tests.
+# GOTOOLCHAIN=local: a go of another release than the go directive fails instead of fetching that release.
 GO_RELEASE := $(shell sed -n 's/^go \(.*\)$$/\1/p' packages/go/go.mod)
-GO_ENV := GOTOOLCHAIN=local CGO_LDFLAGS=-L$(CARGO_TARGET_DIR)/debug GOFLAGS=-tags=polyspec_panic_test,polyspec_codec_test
+GO_FEATURES := panic-test,codec-test
+comma := ,
+GO_TAGS := $(subst -,_,$(subst $(comma),$(comma)polyspec_http_media_type_,polyspec_http_media_type_$(GO_FEATURES)))
+GO_ENV := GOTOOLCHAIN=local CGO_LDFLAGS=-L$(CARGO_TARGET_DIR)/debug GOFLAGS=-tags=$(GO_TAGS)
 test-go: bindings
 	test "$$($(GO_ENV) $(GO) env GOVERSION)" = "go$(GO_RELEASE)"
-	$(CARGO) build $(CARGOFLAGS) -p $(CORE)-go --locked --features panic-test,codec-test
+	$(CARGO) build $(CARGOFLAGS) -p $(CORE)-go --locked --features $(GO_FEATURES)
 	test -z "$$(cd packages/go && $(GOFMT) -l .)"
 	cd packages/go && $(GO_ENV) $(GO) vet ./...
 	cd packages/go && $(GO_ENV) HTTP_MEDIA_TYPE_CASES=$(CASES) $(GO) test -count=1 -v ./...

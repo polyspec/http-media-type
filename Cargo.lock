@@ -1090,7 +1090,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-media-type"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "polyspec-binding-core",
  "proptest",
@@ -1099,7 +1099,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-media-type-go"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-http-media-type",
@@ -1107,7 +1107,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-media-type-node"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "napi",
  "napi-build",
@@ -1118,7 +1118,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-media-type-php-ext"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "ext-php-rs",
  "polyspec-binding-core",
@@ -1127,7 +1127,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-media-type-python"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-http-media-type",
@@ -1136,7 +1136,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-media-type-wasm"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "js-sys",
  "polyspec-binding-core",

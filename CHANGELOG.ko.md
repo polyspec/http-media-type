@@ -1,7 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 34714a8e65cdecc7b3353dba6d9d6b13e470d9f3d77e39d1c104d427b9355285 -->
+<!-- source-sha256: e5f557fbf2bca7c0d6b7217207604c01f03fad9ca97e974d9de7b81b0610d7ca -->
 
 ## Unreleased
+
+## 0.0.8
+
+- Go 시험(T1.13, T1.14): `make test-go`는 `go test`에 Go crate의 각 feature의 build tag `polyspec_http_media_type_<feature>`를
+  준다. binding 0.0.17은 그 tag 아래에 생성 Go 시험을 쓴다. 0.0.7의 tag로는 `go test`가 panic 시험도 codec 시험도 빌드하지
+  않고 그것 없이 통과했다.
 
 ## 0.0.7
 

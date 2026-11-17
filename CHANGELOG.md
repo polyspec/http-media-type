@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.0.8
+
+- Go tests (T1.13, T1.14): `make test-go` gives `go test` the build tag `polyspec_http_media_type_<feature>` of each
+  feature of the Go crate, under which binding 0.0.17 writes the generated Go tests. With the tags of 0.0.7, `go test`
+  built neither the panic test nor the codec test, and passed without them.
+
 ## 0.0.7
 
 - binding 0.0.17 and kit 0.0.118 (T1.12): `polyspec-binding-core` of every Cargo manifest names `tag = "v0.0.17"`,
