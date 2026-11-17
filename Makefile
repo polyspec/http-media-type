@@ -68,6 +68,14 @@ bootstrap:
 # install installs, in order, the mise, node and npm of mise.toml, the packages of package-lock.json and the other tools:
 # those of mise.toml at the digests of mise.lock, the Rust toolchain of rust-toolchain.toml with its targets and the PHP
 # of the machine (.php-version), all into var/tools of this checkout.
+# The local links of 0.0.x development: make link links the packages of the checkouts that .links names (kit K869); the
+# MISE_* exports above keep mise from asking the trust of mise.toml, which the recipe reads as its global config.
+.PHONY: link unlink
+link:
+	$(NODE) $(KIT)/link.mjs link
+unlink:
+	$(NODE) $(KIT)/link.mjs unlink
+
 install:
 	$(MAKE) --no-print-directory install-tools TOOLS=npm
 	$(MAKE) --no-print-directory install-packages
