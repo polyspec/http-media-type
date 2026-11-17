@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-rust-core -->
-<!-- source-sha256: 63a25321cb2514a401afa18ffaad181183cb4b332dce7c6de8beeff74d9e01ca -->
+<!-- source-sha256: a7c9323a3d2fcde7f75f50e9c8e0c7f7d5226863c01a78b6372a6ca3c28f62ba -->
 # Rust 코어 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -29,3 +29,4 @@
 | T1.12 | binding 0.0.17과 kit 0.0.118 위에서 0.0.7을 내어 binding 0.0.17을 쓰고 이 코어에 의존하는 저장소가 `polyspec-binding-core` 하나를 고정하게 한다(CK-20). lock을 먼저 갱신한다. binding check와 generate에 `--cargo`를 넘긴다(GN-1d). `packages/rust/interface.json`의 각 case row에 결과 key와, 코어 시험이 읽는 key인 `reads: ["rules"]`를 적고, 어떤 시험도 읽지 않는 case key `label`을 G-5의 case key `note`로 바꾼다(CK-96). `tests/scripts/binding.test.mts`의 version을 갱신하고, 버전 커밋 `chore(release): Release 0.0.7 (#T1.12)`를 만든다 | `package.json`, `package-lock.json`, `packages/*/Cargo.toml`, `Cargo.lock`, `Makefile`, `packages/rust/interface.json`, `contracts/media-type.json`, `tests/scripts/`, `CHANGELOG.md` | `make check test-bindings` | [o] |
 | T1.13 | 0.0.7(T1.12)의 게이트가 생성 Go 시험을 빌드하지 않았음을 기록한다. binding 0.0.17은 그 시험을 build tag `polyspec_http_media_type_<feature>` 아래에 쓰는데, `make test-go`는 `polyspec_panic_test,polyspec_codec_test`를 주었다. 그래서 `go test`는 `TestB7APanicIsKindInternal`과 `TestB8Latin1RoundTrips` 없이 통과했고, 게이트의 로그는 어디에서도 그 이름을 대지 않는다. T1.12 행의 상태는 그대로 둔다. 그 CI와 release는 통과했다. 이 행은 그것들이 덮지 않은 것을 기록한다 | `docs/plans/rust-core/checklist.md` | T1.12의 `make test-bindings` 로그가 두 시험을 대지 않는다 | [v] |
 | T1.14 | 0.0.8을 내어 `make test-go`가 생성 Go 시험을 빌드하고 돌리게 한다. `go test`에 Go crate의 각 feature의 build tag `polyspec_http_media_type_<feature>`를 주고, recipe의 dry run으로 시험한다(`tests/scripts/recipes.test.mts`, 0.0.7의 tag에서 실패한다). 버전 커밋 `chore(release): Release 0.0.8 (#T1.14)`를 만든다 | `Makefile`, `tests/scripts/`, `packages/*/Cargo.toml`, `Cargo.lock`, `CHANGELOG.md` | `make check test-bindings`. `make test-go` 로그가 `TestB7APanicIsKindInternal`과 `TestB8Latin1RoundTrips`를 통과로 댄다 | [o] |
+| T1.15 | 각 binding crate의 test feature를 Makefile의 목록 대신 그 manifest의 `[features]` 표에서 읽고, `go test`의 build tag도 같은 목록에서 만든다. `make lint-bindings`는 그 합집합으로 workspace를 lint한다. 전에는 `panic-test`만 주어 Go crate의 feature `codec-test`의 코드가 lint되지 않았다. `tests/scripts/recipes.test.mts`는 각 recipe가 돌 것을 manifest와 대조하고, feature를 직접 적은 recipe나 변수에서 실패한다 | `Makefile`, `tests/scripts/recipes.test.mts`, `CHANGELOG.md` | `make test-scripts`, `make test-bindings` | [~] |

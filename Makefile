@@ -131,10 +131,23 @@ bindings-check:
 bindings:
 	$(BINDING) generate --root . --cargo "$(CARGO)"
 
+# The test features of a binding crate are the names of the [features] table of its manifest, which binding scaffold
+# writes (binding GN-5): a crate built without one has no entry point that a generated test calls. Their union is the
+# features of the lint of the workspace.
+comma := ,
+space := $(subst ,, )
+features_of = $(subst $(space),$(comma),$(strip $(shell sed -n '/^\[features\]$$/,/^\[/s/^\([a-z][a-z0-9-]*\) = .*/\1/p' $(1))))
+PYTHON_FEATURES = $(call features_of,packages/python/Cargo.toml)
+NODE_FEATURES = $(call features_of,packages/ts/Cargo.toml)
+WASM_FEATURES = $(call features_of,packages/ts/wasm/Cargo.toml)
+PHP_FEATURES = $(call features_of,packages/php-ext/Cargo.toml)
+GO_FEATURES = $(call features_of,packages/go/internal/ffi/Cargo.toml)
+TEST_FEATURES = $(subst $(space),$(comma),$(sort $(subst $(comma),$(space),$(PYTHON_FEATURES),$(NODE_FEATURES),$(WASM_FEATURES),$(PHP_FEATURES),$(GO_FEATURES))))
+
 test-bindings: lint-bindings check-declarations test-python test-node test-wasm test-php test-go
 
 lint-bindings: bindings
-	$(CARGO) clippy $(CARGOFLAGS) --workspace --locked --all-targets --features panic-test -- -D warnings
+	$(CARGO) clippy $(CARGOFLAGS) --workspace --locked --all-targets --features $(TEST_FEATURES) -- -D warnings
 
 # The TypeScript compiler of package-lock.json, which make install-packages installs, checks the generated declarations
 # of the Node binding.
@@ -146,7 +159,7 @@ check-declarations: bindings
 test-python: bindings
 	$(PYTHON) -m venv --clear $(VAR)/venv
 	rm -rf $(VAR)/wheels
-	cd packages/python && $(MATURIN) build --locked --interpreter $(VAR)/venv/bin/python --features panic-test --out $(VAR)/wheels $(CARGOFLAGS)
+	cd packages/python && $(MATURIN) build --locked --interpreter $(VAR)/venv/bin/python --features $(PYTHON_FEATURES) --out $(VAR)/wheels $(CARGOFLAGS)
 	$(VAR)/venv/bin/pip install -q --no-index --force-reinstall $(VAR)/wheels/*.whl
 	cd $(VAR) && venv/bin/python -m unittest discover -s $(CURDIR)/packages/python/generated/tests -t $(CURDIR)/packages/python/generated/tests
 	cd $(VAR) && HTTP_MEDIA_TYPE_CASES=$(CASES) venv/bin/python -m unittest discover -s $(CURDIR)/packages/python/tests -t $(CURDIR)/packages/python/tests
@@ -161,10 +174,10 @@ NODE_ADDON := http-media-type.$(PLATFORM).node
 WASM_BINDGEN_RELEASE := $(shell sed -n 's/^wasm-bindgen = "=\(.*\)"$$/\1/p' packages/ts/wasm/Cargo.toml)
 node-package: bindings
 	test "$$($(WASM_BINDGEN) --version)" = "wasm-bindgen $(WASM_BINDGEN_RELEASE)"
-	$(CARGO) build $(CARGOFLAGS) -p $(CORE)-wasm --locked --target wasm32-unknown-unknown --features panic-test
+	$(CARGO) build $(CARGOFLAGS) -p $(CORE)-wasm --locked --target wasm32-unknown-unknown --features $(WASM_FEATURES)
 	$(WASM_BINDGEN) --target web --out-dir packages/ts/wasm/generated --out-name http_media_type_wasm \
 		$(CARGO_TARGET_DIR)/wasm32-unknown-unknown/debug/polyspec_http_media_type_wasm.wasm
-	$(CARGO) build $(CARGOFLAGS) -p $(CORE)-node --locked --features panic-test
+	$(CARGO) build $(CARGOFLAGS) -p $(CORE)-node --locked --features $(NODE_FEATURES)
 	rm -rf $(VAR)/node $(VAR)/node-platform && mkdir -p $(VAR)/node $(VAR)/node-platform
 	cp $(CARGO_TARGET_DIR)/debug/libpolyspec_http_media_type_node.$(CDYLIB) $(VAR)/node-platform/$(NODE_ADDON)
 	$(NODE) -e 'const p = require("./packages/ts/package.json"); require("fs").writeFileSync("$(VAR)/node-platform/package.json", JSON.stringify({ name: p.name + "-$(PLATFORM)", version: p.version, os: [process.platform], cpu: [process.arch], main: "$(NODE_ADDON)", files: ["$(NODE_ADDON)"] }, null, 2) + "\n")'
@@ -181,7 +194,7 @@ test-node: node-package
 # The extension built against PHP_CONFIG and loaded into PHP; the stub is linted, then the generated tests and the
 # contract cases run on PHPUnit.
 test-php: bindings
-	$(CARGO) build $(CARGOFLAGS) -p $(CORE)-php-ext --locked --features panic-test
+	$(CARGO) build $(CARGOFLAGS) -p $(CORE)-php-ext --locked --features $(PHP_FEATURES)
 	$(PHP) -l packages/php-ext/generated/polyspec_http_media_type.stub.php
 	$(PHP) -d extension=$(CARGO_TARGET_DIR)/debug/libpolyspec_http_media_type.$(CDYLIB) $(PHPUNIT) packages/php-ext/generated/tests
 	HTTP_MEDIA_TYPE_CASES=$(CASES) $(PHP) -d extension=$(CARGO_TARGET_DIR)/debug/libpolyspec_http_media_type.$(CDYLIB) $(PHPUNIT) packages/php-ext/tests
@@ -198,10 +211,8 @@ test-wasm: node-package
 # polyspec_http_media_type_<feature> of each feature of the Go crate, under which binding writes the generated tests.
 # GOTOOLCHAIN=local: a go of another release than the go directive fails instead of fetching that release.
 GO_RELEASE := $(shell sed -n 's/^go \(.*\)$$/\1/p' packages/go/go.mod)
-GO_FEATURES := panic-test,codec-test
-comma := ,
-GO_TAGS := $(subst -,_,$(subst $(comma),$(comma)polyspec_http_media_type_,polyspec_http_media_type_$(GO_FEATURES)))
-GO_ENV := GOTOOLCHAIN=local CGO_LDFLAGS=-L$(CARGO_TARGET_DIR)/debug GOFLAGS=-tags=$(GO_TAGS)
+GO_TAGS = $(subst -,_,$(subst $(comma),$(comma)polyspec_http_media_type_,polyspec_http_media_type_$(GO_FEATURES)))
+GO_ENV = GOTOOLCHAIN=local CGO_LDFLAGS=-L$(CARGO_TARGET_DIR)/debug GOFLAGS=-tags=$(GO_TAGS)
 test-go: bindings
 	test "$$($(GO_ENV) $(GO) env GOVERSION)" = "go$(GO_RELEASE)"
 	$(CARGO) build $(CARGOFLAGS) -p $(CORE)-go --locked --features $(GO_FEATURES)

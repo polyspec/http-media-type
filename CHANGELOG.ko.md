@@ -1,7 +1,9 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e5f557fbf2bca7c0d6b7217207604c01f03fad9ca97e974d9de7b81b0610d7ca -->
+<!-- source-sha256: 7ec63acb85a982a89f31573549d8335fb230b8364ad0ec3cfd259dbb4b3580a6 -->
 
 ## Unreleased
+
+- recipe는 각 binding crate의 test feature를 그 manifest에서 읽고(T1.15), `go test`의 build tag도 같은 목록에서 만든다. `make lint-bindings`는 그 합집합으로 workspace를 lint하므로 Go crate의 feature `codec-test`의 코드도 lint된다.
 
 ## 0.0.8
 

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The recipes read the test features of each binding crate from its manifest (T1.15), and the build tags of `go test`
+  come from the same list. `make lint-bindings` lints the workspace with their union, so the code of the feature
+  `codec-test` of the Go crate is linted.
+
 ## 0.0.8
 
 - Go tests (T1.13, T1.14): `make test-go` gives `go test` the build tag `polyspec_http_media_type_<feature>` of each
