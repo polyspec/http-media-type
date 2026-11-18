@@ -277,7 +277,7 @@ CI_CHECK_NAMES := core bindings
 CI_CHECK_INSTALLS_core := install-tools install-binding
 CI_CHECK_TARGETS_core := lint-rust fmt-check test bindings-check docs-check test-scripts release-coverage release-candidate-assets release-go-module-rehearsal
 CI_CHECK_INSTALLS_bindings := install-tools install-binding install-php-tools
-CI_CHECK_TARGETS_bindings := lint-bindings check-declarations test-python test-node test-wasm test-php test-go
+CI_CHECK_TARGETS_bindings := lint-bindings check-declarations test-python python-source-import test-node test-wasm test-php test-go
 
 # ci-check runs the installs of the entry NAME in order and stops at the first that fails, then its targets with
 # ci-targets into var/ci/NAME, then ci-summary always, with the outcome of each install as CI_STEPS.
