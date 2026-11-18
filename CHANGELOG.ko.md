@@ -3,6 +3,11 @@
 
 ## Unreleased
 
+- 바인딩을 release 0.0.22에 고정한다(T1.21). 매니페스트는 `polyspec-binding-core`의 태그 v0.0.22와 `@polyspec/binding` 0.0.22의 release asset을 적고, lock은 그것을 따른다.
+- Go 모듈의 release 리허설은 CHANGELOG.md에서 버전을 읽고, release 레시피 뒤에 돈다(T1.22).
+- release의 Python 소스는 wheel의 네이티브 모듈을 받고, 소스 import가 그 모듈이 그 소스 아래에 있는지 확인한다(T1.23).
+- 소스 import의 PYTHONPATH 등록(T1.24)과 make pin, pin-check 등록(T1.25)을 적는다. PYTHONPATH를 쓰는 레시피는 이 release에서 바꾸지 않았다.
+
 ## 0.0.9
 
 - recipe는 각 binding crate의 test feature를 그 manifest에서 읽고(T1.15), `go test`의 build tag도 같은 목록에서 만든다. `make lint-bindings`는 그 합집합으로 workspace를 lint하므로 Go crate의 feature `codec-test`의 코드도 lint된다.

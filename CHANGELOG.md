@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- The binding is pinned at its release 0.0.22 (T1.21): the manifests name the tag v0.0.22 of `polyspec-binding-core` and the
+  release asset of `@polyspec/binding` 0.0.22, and the locks follow them.
+- The rehearsal of the Go module reads its version from CHANGELOG.md and runs after the release recipes (T1.22).
+- The Python source of the release gets the native module of the wheel, and the source import checks that the module lies
+  under that source (T1.23).
+- The registration of the PYTHONPATH of the source import (T1.24) and of the make pin and pin-check (T1.25) is recorded; the
+  recipe that still uses PYTHONPATH is not changed in this release.
+
 ## 0.0.9
 
 - The recipes read the test features of each binding crate from its manifest (T1.15), and the build tags of `go test`
