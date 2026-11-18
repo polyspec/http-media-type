@@ -169,6 +169,8 @@ test-python: bindings
 	rm -rf $(VAR)/wheels
 	cd packages/python && $(MATURIN) build --locked --interpreter $(VAR)/venv/bin/python --features $(PYTHON_FEATURES) --out $(VAR)/wheels $(CARGOFLAGS)
 	$(VAR)/venv/bin/pip install -q --no-index --force-reinstall $(VAR)/wheels/*.whl
+	rm -rf $(VAR)/native && unzip -q $(VAR)/wheels/*.whl 'polyspec/http_media_type/_native*.so' -d $(VAR)/native
+	cp $(VAR)/native/polyspec/http_media_type/_native*.so packages/python/generated/python/polyspec/http_media_type/
 	cd $(VAR) && venv/bin/python -m unittest discover -s $(CURDIR)/packages/python/generated/tests -t $(CURDIR)/packages/python/generated/tests
 	cd $(VAR) && HTTP_MEDIA_TYPE_CASES=$(CASES) venv/bin/python -m unittest discover -s $(CURDIR)/packages/python/tests -t $(CURDIR)/packages/python/tests
 
