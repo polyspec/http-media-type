@@ -99,3 +99,10 @@ test('the job check of CI rehearses the Go module of the release with no tag', (
   assert.ok(core.includes('release-go-module-rehearsal'), `the entry core of ci-check runs ${core.join(' ')}`);
   assert.match(makefile, /^release-go-module-rehearsal:/m, 'the Makefile has no target release-go-module-rehearsal');
 });
+
+// The Python source of the release, generated/python (pyproject.toml, python-source), holds the native module beside its
+// package, so a consumer that links the source folder imports it (T1.23). Read on the dry run of test-python: no build.
+test('test-python puts the native module into the Python source of the release', () => {
+  const dry = execFileSync('make', ['-n', 'test-python'], { cwd: root, encoding: 'utf8' });
+  assert.match(dry, /_native\*\.so packages\/python\/generated\/python\/polyspec\/http_media_type\//, `test-python does not copy the native module into generated/python:\n${dry}`);
+});
