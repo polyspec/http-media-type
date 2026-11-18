@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.0.10
+
 - The binding is pinned at its release 0.0.22 (T1.21): the manifests name the tag v0.0.22 of `polyspec-binding-core` and the
   release asset of `@polyspec/binding` 0.0.22, and the locks follow them.
 - The rehearsal of the Go module reads its version from CHANGELOG.md and runs after the release recipes (T1.22).

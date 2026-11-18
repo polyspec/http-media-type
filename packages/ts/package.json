@@ -1,6 +1,6 @@
 {
   "name": "@polyspec/http-media-type",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "The http-media-type library of polyspec for Node and the browser",
   "license": "MIT",
   "type": "module",
