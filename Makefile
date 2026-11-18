@@ -204,6 +204,12 @@ node-package: bindings
 	cd $(VAR)/node && $(NPM) install --offline --no-audit --no-fund --omit=optional ./*.tgz
 
 # The generated tests and the contract cases of the Node binding on node --test, against the installed package.
+# python-source-import imports the native module from the Python source of the release (T1.23), with that source first on
+# PYTHONPATH, and fails unless the module file lies under it: test-python runs on the installed wheel alone.
+.PHONY: python-source-import
+python-source-import: test-python ## Import the native module from the Python source of the release, not the installed wheel; offline
+	cd $(VAR) && PYTHONPATH=$(CURDIR)/packages/python/generated/python venv/bin/python -c "import os, polyspec.http_media_type._native as n; src = os.path.realpath('$(CURDIR)/packages/python/generated/python'); assert os.path.realpath(n.__file__).startswith(src + os.sep), n.__file__"
+
 test-node: node-package
 	cp packages/ts/generated/tests/generated.test.mjs packages/ts/tests/cases.test.mjs $(VAR)/node/
 	cd $(VAR)/node && HTTP_MEDIA_TYPE_CASES=$(CASES) $(NODE) --test generated.test.mjs cases.test.mjs
