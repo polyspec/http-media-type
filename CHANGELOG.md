@@ -11,6 +11,8 @@
   under that source (T1.23).
 - The registration of the PYTHONPATH of the source import (T1.24) and of the make pin and pin-check (T1.25) is recorded; the
   recipe that still uses PYTHONPATH is not changed in this release.
+- The rehearsal of the Go module runs release-recipes before rehearse-go-module, so a new checkout has packages/release.mk
+  when the rehearsal starts (T1.27).
 
 ## 0.0.9
 
