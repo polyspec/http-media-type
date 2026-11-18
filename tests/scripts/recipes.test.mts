@@ -90,3 +90,12 @@ test('the job check of CI builds the archives of the release from the commit wit
   assert.equal(recipe.length, 1, `make release-candidate-assets runs ${String(recipe.length)} lines`);
   assert.match(recipe[0] ?? '', /^RELEASE_ASSETS=var\/release-candidate\/assets +\S+\/node \S+\/release\.mjs candidate-assets$/);
 });
+
+// The job check of CI rehearses the Go module of the release on the committed HEAD with no tag and pushes nothing, so a
+// failure of the Go module shows before the tag (T-row of the rehearsal, B2.539).
+test('the job check of CI rehearses the Go module of the release with no tag', () => {
+  const makefile = readFileSync(resolve(root, 'Makefile'), 'utf8');
+  const core = /^CI_CHECK_TARGETS_core := (.*)$/m.exec(makefile)?.[1]?.split(' ') ?? [];
+  assert.ok(core.includes('release-go-module-rehearsal'), `the entry core of ci-check runs ${core.join(' ')}`);
+  assert.match(makefile, /^release-go-module-rehearsal:/m, 'the Makefile has no target release-go-module-rehearsal');
+});
