@@ -269,7 +269,7 @@ ci-passed:
 # PHPUnit of composer.lock.
 CI_CHECK_NAMES := core bindings
 CI_CHECK_INSTALLS_core := install-tools install-binding
-CI_CHECK_TARGETS_core := lint-rust fmt-check test bindings-check docs-check test-scripts release-coverage release-candidate-assets
+CI_CHECK_TARGETS_core := lint-rust fmt-check test bindings-check docs-check test-scripts release-coverage release-candidate-assets release-go-module-rehearsal
 CI_CHECK_INSTALLS_bindings := install-tools install-binding install-php-tools
 CI_CHECK_TARGETS_bindings := lint-bindings check-declarations test-python test-node test-wasm test-php test-go
 
@@ -403,6 +403,12 @@ release-tag-output:
 # package, so the release installs no dependency before its tools.
 release-prepare:
 	@echo 'release-prepare: the Composer package of config/release.json requires no package, so the release installs no dependency'
+
+# release-go-module-rehearsal rehearses the Go module of the newest version that CHANGELOG.md records (scripts/rehearsal-version.mts)
+# on HEAD with no tag (T1.22): that version is the TAG of rehearse-go-module, whose inputs its prerequisites build.
+.PHONY: release-go-module-rehearsal
+release-go-module-rehearsal: ## Rehearse the Go module of the newest version of CHANGELOG.md on HEAD with no tag; offline
+	$(MAKE) --no-print-directory rehearse-go-module TAG="$$($(NODE) scripts/rehearsal-version.mts)"
 
 release-tools:
 	$(ONLINE) $(NODE) $(KIT)/release-tools.mjs
