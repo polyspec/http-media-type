@@ -38,6 +38,8 @@ jobs:
           - name: bindings
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/bootstrap
       # shivammathur/setup-php 2.40.0: the PHP of .php-version, which make install-tools wraps in var/tools/bin; every entry
       # installs every tool of the checkout, so every entry sets it up.
