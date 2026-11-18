@@ -13,6 +13,8 @@
   recipe that still uses PYTHONPATH is not changed in this release.
 - The rehearsal of the Go module runs release-recipes before rehearse-go-module, so a new checkout has packages/release.mk
   when the rehearsal starts (T1.27).
+- The job check of ci.yml checks out the full history (fetch-depth: 0), so the rehearsal of the Go module finds the parent
+  commits of HEAD (T1.28).
 
 ## 0.0.9
 
