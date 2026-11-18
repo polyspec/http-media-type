@@ -164,13 +164,19 @@ check-declarations: bindings
 	node_modules/.bin/tsc --noEmit --strict packages/ts/wasm/generated/index.d.ts
 
 # The wheel that the maturin of mise.toml builds, installed into a virtual environment without an index; the generated tests (G-5) and the contract cases (MT-1 to MT-8).
+# The native module is copied into the Python source of the release (T1.23) from the wheel of this same locked build, never
+# rebuilt, and the copy is one rename into place: binding writes the native module to python-source/<module>._binding._native
+# (packages.ts:316-318), and kit's link-folders says the provider builds it into that source root (link-folders.mts:257-259).
 test-python: bindings
 	$(PYTHON) -m venv --clear $(VAR)/venv
 	rm -rf $(VAR)/wheels
 	cd packages/python && $(MATURIN) build --locked --interpreter $(VAR)/venv/bin/python --features $(PYTHON_FEATURES) --out $(VAR)/wheels $(CARGOFLAGS)
 	$(VAR)/venv/bin/pip install -q --no-index --force-reinstall $(VAR)/wheels/*.whl
 	rm -rf $(VAR)/native && unzip -q $(VAR)/wheels/*.whl 'polyspec/http_media_type/_native*.so' -d $(VAR)/native
-	cp $(VAR)/native/polyspec/http_media_type/_native*.so packages/python/generated/python/polyspec/http_media_type/
+	rm -rf packages/python/generated/python/polyspec/http_media_type/.native-stage && mkdir packages/python/generated/python/polyspec/http_media_type/.native-stage
+	cp $(VAR)/native/polyspec/http_media_type/_native*.so packages/python/generated/python/polyspec/http_media_type/.native-stage/
+	mv -f packages/python/generated/python/polyspec/http_media_type/.native-stage/_native*.so packages/python/generated/python/polyspec/http_media_type/
+	rm -rf packages/python/generated/python/polyspec/http_media_type/.native-stage
 	cd $(VAR) && venv/bin/python -m unittest discover -s $(CURDIR)/packages/python/generated/tests -t $(CURDIR)/packages/python/generated/tests
 	cd $(VAR) && HTTP_MEDIA_TYPE_CASES=$(CASES) venv/bin/python -m unittest discover -s $(CURDIR)/packages/python/tests -t $(CURDIR)/packages/python/tests
 
