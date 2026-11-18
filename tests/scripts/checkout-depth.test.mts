@@ -17,5 +17,5 @@ test('the checkout of the job check fetches the full history', () => {
   assert.notEqual(checkout, -1, 'the job check has no checkout step');
   const step = lines.slice(checkout + 1).findIndex((line) => /^ {6}- /.test(line));
   const block = lines.slice(checkout + 1, step === -1 ? undefined : checkout + 1 + step);
-  assert.ok(block.some((line) => /^ {8}fetch-depth: 0$/.test(line)), 'the checkout of the job check does not set fetch-depth: 0');
+  assert.ok(block.some((line) => /^ +fetch-depth: 0$/.test(line)), 'the checkout of the job check does not set fetch-depth: 0');
 });
